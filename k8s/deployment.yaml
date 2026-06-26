@@ -1,0 +1,29 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: clouddeploy-backend
+  labels:
+    app: clouddeploy-backend
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: clouddeploy-backend
+  template:
+    metadata:
+      labels:
+        app: clouddeploy-backend
+    spec:
+      containers:
+        - name: clouddeploy-backend
+          image: clouddeploy-app:v1
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 5000
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "100m"
+            limits:
+              memory: "256Mi"
+              cpu: "250m"
