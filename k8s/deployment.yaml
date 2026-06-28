@@ -40,8 +40,8 @@ spec:
 
       containers:
         - name: devops-platform
-          image: ghcr.io/shivam535353/production-grade-devops-platform:latest
-          imagePullPolicy: Always
+          image: production-grade-devops-platform:v1
+          imagePullPolicy: Never
           ports:
             - name: http
               containerPort: 5000
