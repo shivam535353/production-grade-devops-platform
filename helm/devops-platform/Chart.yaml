@@ -1,0 +1,38 @@
+apiVersion: v2
+name: devops-platform
+description: >-
+  A production-grade Helm chart for deploying the Production-Grade
+  DevOps Platform — a multi-environment, GitOps-driven, auto-scaling
+  Flask microservice on Kubernetes (Minikube → AWS EKS).
+
+type: application
+
+# Chart version — bump this when chart templates/structure change
+version: 0.1.0
+
+# Application version — must match src/config.py -> APP_VERSION
+appVersion: "1.0.0"
+
+keywords:
+  - devops
+  - kubernetes
+  - flask
+  - microservice
+  - gitops
+  - aws-eks
+  - ci-cd
+  - autoscaling
+
+home: https://github.com/shivam535353/production-grade-devops-platform
+
+sources:
+  - https://github.com/shivam535353/production-grade-devops-platform
+
+maintainers:
+  - name: Shivam Gadilkar
+    url: https://github.com/shivam535353
+
+icon: https://raw.githubusercontent.com/kubernetes/kubernetes/master/logo/logo.svg
+
+annotations:
+  category: Infrastructure
