@@ -1,0 +1,32 @@
+# =============================================================================
+# Development Environment Overrides (Minikube)
+# =============================================================================
+
+namespace: dev
+
+image:
+  tag: "v1"
+  pullPolicy: Never        # Minikube local image — never pull from registry
+
+replicaCount: 1
+
+resources:
+  requests:
+    cpu: 50m
+    memory: 64Mi
+  limits:
+    cpu: 200m
+    memory: 128Mi
+
+autoscaling:
+  enabled: false
+
+ingress:
+  enabled: false
+
+env:
+  APP_ENV: "development"
+  CLOUD_PLATFORM: "Minikube"
+
+secret:
+  secretKey: "local-dev-secret-12345"

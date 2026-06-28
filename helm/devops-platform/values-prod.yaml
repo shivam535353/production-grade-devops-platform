@@ -1,0 +1,47 @@
+# =============================================================================
+# Production Environment Overrides (AWS EKS)
+# =============================================================================
+
+namespace: production
+
+image:
+  repository: ghcr.io/shivam535353/production-grade-devops-platform
+  tag: "latest"
+  pullPolicy: Always
+
+replicaCount: 3
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 128Mi
+  limits:
+    cpu: 500m
+    memory: 256Mi
+
+autoscaling:
+  enabled: true
+  minReplicas: 3
+  maxReplicas: 10
+  targetCPUUtilizationPercentage: 70
+  targetMemoryUtilizationPercentage: 80
+
+ingress:
+  enabled: true
+  className: alb
+  annotations:
+    alb.ingress.kubernetes.io/scheme: internet-facing
+    alb.ingress.kubernetes.io/target-type: ip
+    alb.ingress.kubernetes.io/healthcheck-path: /health
+  hosts:
+    - host: devops-platform.example.com
+      paths:
+        - path: /
+          pathType: Prefix
+
+env:
+  APP_ENV: "production"
+  CLOUD_PLATFORM: "AWS EKS"
+
+secret:
+  secretKey: "CHANGE_ME_IN_CI_CD_PIPELINE"   # Real value injected via GitHub Secrets / AWS Secrets Manager

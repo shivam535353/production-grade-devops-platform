@@ -1,0 +1,151 @@
+# =============================================================================
+# production-grade-devops-platform — Default Helm Values
+# These are BASE defaults. Environment files (values-dev.yaml / values-prod.yaml)
+# override only what is different.
+# =============================================================================
+
+# -----------------------------------------------------------------------------
+# Application Identity
+# -----------------------------------------------------------------------------
+nameOverride: ""
+fullnameOverride: ""
+
+# -----------------------------------------------------------------------------
+# Namespace
+# -----------------------------------------------------------------------------
+namespace: default
+
+# -----------------------------------------------------------------------------
+# Container Image
+# -----------------------------------------------------------------------------
+image:
+  repository: production-grade-devops-platform
+  tag: "v1"
+  pullPolicy: IfNotPresent
+
+# -----------------------------------------------------------------------------
+# Replica Count (overridden per environment)
+# -----------------------------------------------------------------------------
+replicaCount: 2
+
+# -----------------------------------------------------------------------------
+# Service Account
+# -----------------------------------------------------------------------------
+serviceAccount:
+  create: true
+  automount: true
+  annotations: {}
+  name: ""
+
+# -----------------------------------------------------------------------------
+# Pod Annotations & Labels (extra, beyond standard ones)
+# -----------------------------------------------------------------------------
+podAnnotations: {}
+podLabels: {}
+
+# -----------------------------------------------------------------------------
+# Security Context
+# -----------------------------------------------------------------------------
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 1001
+  runAsGroup: 1001
+  fsGroup: 1001
+
+securityContext:
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: false
+  capabilities:
+    drop:
+      - ALL
+
+# -----------------------------------------------------------------------------
+# Service
+# -----------------------------------------------------------------------------
+service:
+  type: ClusterIP
+  port: 80
+  targetPort: 5000
+
+# -----------------------------------------------------------------------------
+# Ingress
+# -----------------------------------------------------------------------------
+ingress:
+  enabled: false
+  className: "alb"
+  annotations:
+    kubernetes.io/ingress.class: alb
+    alb.ingress.kubernetes.io/scheme: internet-facing
+    alb.ingress.kubernetes.io/target-type: ip
+    alb.ingress.kubernetes.io/healthcheck-path: /health
+  hosts:
+    - host: devops-platform.local
+      paths:
+        - path: /
+          pathType: Prefix
+          port: 80
+  tls: []
+# -----------------------------------------------------------------------------
+# Resource Requests & Limits
+# -----------------------------------------------------------------------------
+resources:
+  requests:
+    cpu: 100m
+    memory: 128Mi
+  limits:
+    cpu: 500m
+    memory: 256Mi
+
+# -----------------------------------------------------------------------------
+# Autoscaling (HPA)
+# -----------------------------------------------------------------------------
+autoscaling:
+  enabled: false
+  minReplicas: 2
+  maxReplicas: 10
+  targetCPUUtilizationPercentage: 70
+  targetMemoryUtilizationPercentage: 80
+
+# -----------------------------------------------------------------------------
+# Probes
+# -----------------------------------------------------------------------------
+livenessProbe:
+  path: /health
+  initialDelaySeconds: 10
+  periodSeconds: 30
+  timeoutSeconds: 5
+  failureThreshold: 3
+
+readinessProbe:
+  path: /health
+  initialDelaySeconds: 5
+  periodSeconds: 10
+  timeoutSeconds: 3
+  failureThreshold: 3
+
+# -----------------------------------------------------------------------------
+# Environment Variables (non-secret)
+# -----------------------------------------------------------------------------
+env:
+  APP_ENV: "development"
+  CLOUD_PLATFORM: "Minikube"
+
+# -----------------------------------------------------------------------------
+# ConfigMap data
+# -----------------------------------------------------------------------------
+configMap:
+  enabled: true
+
+# -----------------------------------------------------------------------------
+# Secret (values injected via --set or CI/CD, never hardcoded here)
+# -----------------------------------------------------------------------------
+secret:
+  enabled: true
+  secretKey: "local-dev-secret-change-me"
+
+# -----------------------------------------------------------------------------
+# Node Scheduling
+# -----------------------------------------------------------------------------
+nodeSelector: {}
+tolerations: []
+affinity: {}
