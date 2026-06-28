@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="{{ app_display_name }} — {{ app_tagline }}. Built by {{ developer_name }}." />
+  <meta name="author"      content="{{ developer_name }}" />
+  <meta name="theme-color" content="#080c14" />
+  <meta property="og:title"       content="{{ app_display_name }} — CI/CD Platform" />
+  <meta property="og:description" content="{{ app_tagline }}" />
+  <meta property="og:type"        content="website" />
+  <meta property="og:url"         content="{{ repo_url }}" />
+  <title>{{ app_display_name }} — {{ app_tagline }}</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}" />
+  <link rel="icon" type="image/svg+xml"
+        href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%233b82f6'/><text x='50%25' y='54%25' dominant-baseline='middle' text-anchor='middle' font-family='Inter' font-weight='800' font-size='14' fill='white'>DP</text></svg>" />
+</head>
+<body>
+
+  <!-- NAVIGATION -->
+  <nav class="topnav" role="navigation" aria-label="Main navigation">
+    <div class="container topnav__inner">
+      <a href="/" class="topnav__brand" aria-label="DevOps Platform home">
+        <div class="topnav__logo-mark" aria-hidden="true">DP</div>
+        <span>DevOps Platform</span>
+      </a>
+      <div class="topnav__links" role="list">
+        <a href="#stack"        class="topnav__link" role="listitem">Stack</a>
+        <a href="#features"     class="topnav__link" role="listitem">Features</a>
+        <a href="#architecture" class="topnav__link" role="listitem">Architecture</a>
+        <a href="#api"          class="topnav__link" role="listitem">API</a>
+        <a href="{{ repo_url }}" class="topnav__link" role="listitem"
+           target="_blank" rel="noopener noreferrer">GitHub ↗</a>
+      </div>
+      <div class="badge badge--success" aria-label="System status: running">
+        <span class="badge__dot" aria-hidden="true"></span>
+        Live
+      </div>
+    </div>
+  </nav>
+
+  <!-- HERO -->
+  <section class="hero" id="hero" aria-labelledby="hero-title">
+    <div class="hero__bg" aria-hidden="true">
+      <div class="hero__grid"></div>
+      <div class="hero__glow"></div>
+    </div>
+    <div class="container hero__content">
+      <div class="hero__eyebrow reveal">
+        <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true">
+          <circle cx="6" cy="6" r="6" fill="#3b82f6" opacity="0.5"/>
+          <circle cx="6" cy="6" r="3" fill="#3b82f6"/>
+        </svg>
+        Cloud Native · GitOps · Kubernetes · AWS EKS
+      </div>
+
+      <h1 class="hero__title reveal reveal-delay-1" id="hero-title">
+        <span class="hero__title-gradient">Production-Grade</span><br />
+        DevOps Platform
+      </h1>
+
+      <p class="hero__subtitle reveal reveal-delay-2">
+        Multi-Environment CI/CD Pipeline with Kubernetes, GitOps &amp; Cloud Automation.
+        Enterprise-grade DevSecOps from containerisation to production on AWS EKS —
+        fully automated, secure, and observable.
+      </p>
+
+      <div class="hero__actions reveal reveal-delay-3">
+        <a href="#api" class="btn btn--primary">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+            <path d="M2 4h12M2 8h8M2 12h5" stroke-linecap="round"/>
+          </svg>
+          View API
+        </a>
+        <a href="{{ repo_url }}" target="_blank" rel="noopener noreferrer" class="btn btn--ghost">
+          <svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+            <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38
+                     0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13
+                     -.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66
+                     .07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15
+                     -.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27
+                     .68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12
+                     .51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48
+                     0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/>
+          </svg>
+          GitHub Repository
+        </a>
+        <a href="#architecture" class="btn btn--outline">Documentation</a>
+      </div>
+
+      <div class="reveal reveal-delay-4" style="display:flex;gap:32px;margin-top:8px;flex-wrap:wrap;justify-content:center;">
+        <div style="text-align:center;">
+          <div style="font-size:1.6rem;font-weight:800;font-family:var(--font-mono);color:#fff;">18+</div>
+          <div style="font-size:0.75rem;color:var(--text-muted);font-weight:500;">Technologies</div>
+        </div>
+        <div style="text-align:center;">
+          <div style="font-size:1.6rem;font-weight:800;font-family:var(--font-mono);color:#fff;">7</div>
+          <div style="font-size:0.75rem;color:var(--text-muted);font-weight:500;">REST Endpoints</div>
+        </div>
+        <div style="text-align:center;">
+          <div style="font-size:1.6rem;font-weight:800;font-family:var(--font-mono);color:#fff;">EKS</div>
+          <div style="font-size:0.75rem;color:var(--text-muted);font-weight:500;">AWS Cloud</div>
+        </div>
+        <div style="text-align:center;">
+          <div style="font-size:1.6rem;font-weight:800;font-family:var(--font-mono);color:#fff;">K8s</div>
+          <div style="font-size:0.75rem;color:var(--text-muted);font-weight:500;">Orchestrated</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <hr class="divider" />
+
+  <!-- DEVELOPER CARD -->
+  <section class="dev-card-section section" id="developer" aria-labelledby="dev-title">
+    <div class="container">
+      <div class="section-header section-header--center reveal">
+        <p class="section-eyebrow">Developer</p>
+        <h2 class="section-title" id="dev-title">Behind the Platform</h2>
+      </div>
+      <div class="dev-card reveal reveal-delay-1">
+        <div class="dev-card__glow" aria-hidden="true"></div>
+        <p class="dev-card__label">Developer Profile</p>
+        <div class="dev-card__identity">
+          <div class="dev-card__avatar" aria-hidden="true">SG</div>
+          <div>
+            <h3 class="dev-card__name">{{ developer_name }}</h3>
+            <p style="font-size:0.82rem;color:var(--text-muted);margin-top:2px;font-family:var(--font-mono);">
+              {{ env }} · {{ app_version }}
+            </p>
+          </div>
+        </div>
+        <div class="dev-card__roles">
+          <span class="badge badge--brand">DevSecOps Engineer</span>
+          <span class="badge badge--accent">DevOps Engineer</span>
+          <span class="badge badge--purple">Cloud Enthusiast</span>
+        </div>
+        <div class="dev-card__links">
+          <a href="{{ repo_url }}" target="_blank" rel="noopener noreferrer"
+             class="btn btn--ghost" style="font-size:0.82rem;padding:7px 14px;">
+            <svg viewBox="0 0 16 16" fill="currentColor" width="14" height="14" aria-hidden="true">
+              <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38
+                       0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13
+                       -.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66
+                       .07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15
+                       -.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27
+                       .68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12
+                       .51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48
+                       0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/>
+            </svg>
+            View Repository
+          </a>
+          <a href="/developer" target="_blank" class="btn btn--ghost" style="font-size:0.82rem;padding:7px 14px;">
+            Developer API →
+          </a>
+        </div>
+        <div style="margin-top:var(--space-lg);padding-top:var(--space-lg);border-top:1px solid var(--color-border);
+                    display:flex;gap:var(--space-lg);flex-wrap:wrap;">
+          <div>
+            <div style="font-size:0.7rem;color:var(--text-muted);font-weight:600;text-transform:uppercase;letter-spacing:.06em;">Framework</div>
+            <div style="font-size:0.875rem;font-weight:700;font-family:var(--font-mono);color:var(--color-brand);">Flask · Python</div>
+          </div>
+          <div>
+            <div style="font-size:0.7rem;color:var(--text-muted);font-weight:600;text-transform:uppercase;letter-spacing:.06em;">Platform</div>
+            <div style="font-size:0.875rem;font-weight:700;font-family:var(--font-mono);color:var(--color-accent);">{{ cloud_platform }}</div>
+          </div>
+          <div>
+            <div style="font-size:0.7rem;color:var(--text-muted);font-weight:600;text-transform:uppercase;letter-spacing:.06em;">Commit</div>
+            <div style="font-size:0.875rem;font-weight:700;font-family:var(--font-mono);color:var(--text-secondary);">{{ git_commit }}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <hr class="divider" />
+
+  <!-- STATISTICS -->
+  <section class="section" id="stats" aria-labelledby="stats-title">
+    <div class="container">
+      <div class="section-header section-header--center reveal">
+        <p class="section-eyebrow">Platform Metrics</p>
+        <h2 class="section-title" id="stats-title">By the Numbers</h2>
+      </div>
+      <div class="stats-grid">
+        <div class="stat-card reveal reveal-delay-1">
+          <div class="stat-card__value mono" data-counter data-target="42">0</div>
+          <div class="stat-card__label">Project Files</div>
+        </div>
+        <div class="stat-card reveal reveal-delay-2">
+          <div class="stat-card__value mono" data-counter data-target="7">0</div>
+          <div class="stat-card__label">Git Commits</div>
+        </div>
+        <div class="stat-card reveal reveal-delay-3">
+          <div class="stat-card__value mono" data-counter data-target="2">0</div>
+          <div class="stat-card__label">Docker Images</div>
+        </div>
+        <div class="stat-card reveal reveal-delay-4">
+          <div class="stat-card__value mono" data-counter data-target="4">0</div>
+          <div class="stat-card__label">Containers</div>
+        </div>
+        <div class="stat-card reveal reveal-delay-1">
+          <div class="stat-card__value mono" data-counter data-target="6">0</div>
+          <div class="stat-card__label">Pods</div>
+        </div>
+        <div class="stat-card reveal reveal-delay-2">
+          <div class="stat-card__value mono" data-counter data-target="2">0</div>
+          <div class="stat-card__label">Deployments</div>
+        </div>
+        <div class="stat-card reveal reveal-delay-3">
+          <div class="stat-card__value mono" data-counter data-target="3">0</div>
+          <div class="stat-card__label">K8s Services</div>
+        </div>
+        <div class="stat-card reveal reveal-delay-4">
+          <div class="stat-card__value mono" data-counter data-target="18">0</div>
+          <div class="stat-card__label">Tech Stack</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <hr class="divider" />
+
+  <!-- TECHNOLOGY STACK -->
+  <section class="section" id="stack" aria-labelledby="stack-title">
+    <div class="container">
+      <div class="section-header section-header--center reveal">
+        <p class="section-eyebrow">Technology Stack</p>
+        <h2 class="section-title" id="stack-title">Built With Modern Cloud Native Tools</h2>
+        <p class="section-subtitle">Every layer is production-hardened and battle-tested at scale.</p>
+      </div>
+      <div class="tech-grid">
+        <div class="tech-card reveal reveal-delay-1" style="--tc:rgba(13,183,237,0.08)">
+          <div class="tech-card__icon"><svg viewBox="0 0 40 40" width="28" height="28" fill="none"><rect width="40" height="40" rx="8" fill="rgba(13,183,237,0.15)"/><path d="M20 24H8a2 2 0 01-2-2c0-4 3.6-7.3 8-7.9V12h6v10z" fill="#0db7ed"/><rect x="14" y="17" width="4" height="3" rx="1" fill="#0db7ed" opacity=".7"/><rect x="19" y="17" width="4" height="3" rx="1" fill="#0db7ed" opacity=".7"/><rect x="24" y="17" width="4" height="3" rx="1" fill="#0db7ed" opacity=".7"/><rect x="19" y="13" width="4" height="3" rx="1" fill="#0db7ed" opacity=".5"/><circle cx="32" cy="16" r="3" fill="#0db7ed" opacity=".6"/></svg></div>
+          <div class="tech-card__name">Docker</div><div class="tech-card__cat">Containerisation</div>
+        </div>
+        <div class="tech-card reveal reveal-delay-2" style="--tc:rgba(50,108,229,0.08)">
+          <div class="tech-card__icon"><svg viewBox="0 0 40 40" width="28" height="28" fill="none"><rect width="40" height="40" rx="8" fill="rgba(50,108,229,0.15)"/><circle cx="20" cy="20" r="8" stroke="#326ce5" stroke-width="2" fill="none"/><circle cx="20" cy="20" r="3" fill="#326ce5"/><line x1="20" y1="10" x2="20" y2="14" stroke="#326ce5" stroke-width="2"/><line x1="20" y1="26" x2="20" y2="30" stroke="#326ce5" stroke-width="2"/><line x1="10" y1="20" x2="14" y2="20" stroke="#326ce5" stroke-width="2"/><line x1="26" y1="20" x2="30" y2="20" stroke="#326ce5" stroke-width="2"/></svg></div>
+          <div class="tech-card__name">Kubernetes</div><div class="tech-card__cat">Orchestration</div>
+        </div>
+        <div class="tech-card reveal reveal-delay-3" style="--tc:rgba(50,108,229,0.06)">
+          <div class="tech-card__icon"><svg viewBox="0 0 40 40" width="28" height="28" fill="none"><rect width="40" height="40" rx="8" fill="rgba(50,108,229,0.1)"/><rect x="10" y="14" width="20" height="14" rx="3" fill="none" stroke="#326ce5" stroke-width="1.8"/><circle cx="20" cy="21" r="4" fill="#326ce5" opacity=".7"/><path d="M17 30 L20 34 L23 30" fill="#326ce5" opacity=".5"/></svg></div>
+          <div class="tech-card__name">Minikube</div><div class="tech-card__cat">Local Dev</div>
+        </div>
+        <div class="tech-card reveal reveal-delay-4" style="--tc:rgba(14,116,163,0.08)">
+          <div class="tech-card__icon"><svg viewBox="0 0 40 40" width="28" height="28" fill="none"><rect width="40" height="40" rx="8" fill="rgba(14,116,163,0.15)"/><path d="M20 8 L32 24 L8 24 Z" fill="#0e74a3" opacity=".8"/><rect x="17" y="24" width="6" height="8" rx="2" fill="#0e74a3" opacity=".6"/></svg></div>
+          <div class="tech-card__name">Helm</div><div class="tech-card__cat">Packaging</div>
+        </div>
+        <div class="tech-card reveal reveal-delay-1" style="--tc:rgba(94,56,204,0.08)">
+          <div class="tech-card__icon"><svg viewBox="0 0 40 40" width="28" height="28" fill="none"><rect width="40" height="40" rx="8" fill="rgba(94,56,204,0.15)"/><path d="M16 12 L16 24 L24 20 L24 8 Z" fill="#5e38cc" opacity=".9"/><path d="M26 14 L26 26 L34 22 L34 10 Z" fill="#5e38cc" opacity=".5"/><path d="M6 18 L6 30 L14 26 L14 14 Z" fill="#5e38cc" opacity=".65"/></svg></div>
+          <div class="tech-card__name">Terraform</div><div class="tech-card__cat">IaC</div>
+        </div>
+        <div class="tech-card reveal reveal-delay-2" style="--tc:rgba(35,197,94,0.06)">
+          <div class="tech-card__icon"><svg viewBox="0 0 40 40" width="28" height="28" fill="none"><rect width="40" height="40" rx="8" fill="rgba(35,197,94,0.1)"/><circle cx="20" cy="20" r="8" fill="none" stroke="#23c55e" stroke-width="2"/><path d="M16 16 L24 20 L16 24 Z" fill="#23c55e"/></svg></div>
+          <div class="tech-card__name">GitHub Actions</div><div class="tech-card__cat">CI/CD</div>
+        </div>
+        <div class="tech-card reveal reveal-delay-3" style="--tc:rgba(239,68,68,0.06)">
+          <div class="tech-card__icon"><svg viewBox="0 0 40 40" width="28" height="28" fill="none"><rect width="40" height="40" rx="8" fill="rgba(239,68,68,0.1)"/><circle cx="20" cy="18" r="6" fill="none" stroke="#ef4444" stroke-width="2"/><path d="M14 24 Q20 32 26 24" fill="none" stroke="#ef4444" stroke-width="2"/><circle cx="20" cy="18" r="2" fill="#ef4444"/></svg></div>
+          <div class="tech-card__name">ArgoCD</div><div class="tech-card__cat">GitOps</div>
+        </div>
+        <div class="tech-card reveal reveal-delay-4" style="--tc:rgba(231,75,38,0.08)">
+          <div class="tech-card__icon"><svg viewBox="0 0 40 40" width="28" height="28" fill="none"><rect width="40" height="40" rx="8" fill="rgba(231,75,38,0.12)"/><circle cx="20" cy="20" r="10" fill="none" stroke="#e74b26" stroke-width="2"/><circle cx="20" cy="20" r="4" fill="#e74b26"/><path d="M20 10 L20 14 M20 26 L20 30 M10 20 L14 20 M26 20 L30 20" stroke="#e74b26" stroke-width="2" stroke-linecap="round"/></svg></div>
+          <div class="tech-card__name">Prometheus</div><div class="tech-card__cat">Observability</div>
+        </div>
+        <div class="tech-card reveal reveal-delay-1" style="--tc:rgba(240,100,50,0.08)">
+          <div class="tech-card__icon"><svg viewBox="0 0 40 40" width="28" height="28" fill="none"><rect width="40" height="40" rx="8" fill="rgba(240,100,50,0.12)"/><path d="M8 28 L14 20 L18 24 L22 16 L26 22 L32 12" stroke="#f06432" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg></div>
+          <div class="tech-card__name">Grafana</div><div class="tech-card__cat">Observability</div>
+        </div>
+        <div class="tech-card reveal reveal-delay-2" style="--tc:rgba(0,164,228,0.08)">
+          <div class="tech-card__icon"><svg viewBox="0 0 40 40" width="28" height="28" fill="none"><rect width="40" height="40" rx="8" fill="rgba(0,164,228,0.12)"/><path d="M20 8 L30 14 L30 26 L20 32 L10 26 L10 14 Z" fill="none" stroke="#00a4e4" stroke-width="2"/><path d="M16 20 L18.5 22.5 L24 17" stroke="#00a4e4" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+          <div class="tech-card__name">Trivy</div><div class="tech-card__cat">Security</div>
+        </div>
+        <div class="tech-card reveal reveal-delay-3" style="--tc:rgba(255,153,0,0.08)">
+          <div class="tech-card__icon"><svg viewBox="0 0 40 40" width="28" height="28" fill="none"><rect width="40" height="40" rx="8" fill="rgba(255,153,0,0.12)"/><path d="M8 16 L20 10 L32 16 L32 24 L20 30 L8 24 Z" fill="none" stroke="#ff9900" stroke-width="1.8"/><circle cx="20" cy="20" r="4" fill="#ff9900" opacity=".8"/></svg></div>
+          <div class="tech-card__name">AWS EKS</div><div class="tech-card__cat">Cloud</div>
+        </div>
+        <div class="tech-card reveal reveal-delay-4" style="--tc:rgba(255,230,0,0.06)">
+          <div class="tech-card__icon"><svg viewBox="0 0 40 40" width="28" height="28" fill="none"><rect width="40" height="40" rx="8" fill="rgba(255,230,0,0.08)"/><ellipse cx="20" cy="16" rx="7" ry="9" fill="none" stroke="#ffe600" stroke-width="1.8"/><circle cx="17" cy="14" r="1.5" fill="#ffe600"/><circle cx="23" cy="14" r="1.5" fill="#ffe600"/><path d="M13 25 L15 30 L20 28 L25 30 L27 25" fill="none" stroke="#ffe600" stroke-width="1.8" stroke-linecap="round"/></svg></div>
+          <div class="tech-card__name">Linux</div><div class="tech-card__cat">Operating System</div>
+        </div>
+        <div class="tech-card reveal reveal-delay-1" style="--tc:rgba(55,118,171,0.08)">
+          <div class="tech-card__icon"><svg viewBox="0 0 40 40" width="28" height="28" fill="none"><rect width="40" height="40" rx="8" fill="rgba(55,118,171,0.12)"/><path d="M14 10 C14 8 22 8 22 10 L22 20 C22 22 14 22 14 20 Z" fill="#3776ab" opacity=".9"/><path d="M26 30 C26 32 18 32 18 30 L18 20 C18 18 26 18 26 20 Z" fill="#ffd43b" opacity=".9"/><circle cx="18" cy="15" r="1.5" fill="#ffd43b"/><circle cx="22" cy="25" r="1.5" fill="#3776ab"/></svg></div>
+          <div class="tech-card__name">Python</div><div class="tech-card__cat">Language</div>
+        </div>
+        <div class="tech-card reveal reveal-delay-2" style="--tc:rgba(200,200,200,0.05)">
+          <div class="tech-card__icon"><svg viewBox="0 0 40 40" width="28" height="28" fill="none"><rect width="40" height="40" rx="8" fill="rgba(200,200,200,0.06)"/><path d="M16 10 L20 28 L24 22 L28 30" stroke="#e5e7eb" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="13" cy="26" r="3" fill="#e5e7eb" opacity=".6"/></svg></div>
+          <div class="tech-card__name">Flask</div><div class="tech-card__cat">Framework</div>
+        </div>
+        <div class="tech-card reveal reveal-delay-3" style="--tc:rgba(240,80,50,0.08)">
+          <div class="tech-card__icon"><svg viewBox="0 0 40 40" width="28" height="28" fill="none"><rect width="40" height="40" rx="8" fill="rgba(240,80,50,0.12)"/><circle cx="14" cy="14" r="3" fill="#f05032"/><circle cx="26" cy="14" r="3" fill="#f05032"/><circle cx="14" cy="26" r="3" fill="#f05032"/><path d="M14 17 L14 23 M14 17 Q14 14 17 14 L23 14" stroke="#f05032" stroke-width="2" fill="none"/></svg></div>
+          <div class="tech-card__name">Git</div><div class="tech-card__cat">Version Control</div>
+        </div>
+        <div class="tech-card reveal reveal-delay-4" style="--tc:rgba(200,200,200,0.05)">
+          <div class="tech-card__icon"><svg viewBox="0 0 40 40" width="28" height="28" fill="none"><rect width="40" height="40" rx="8" fill="rgba(200,200,200,0.06)"/><path d="M20 9C13.925 9 9 13.925 9 20c0 4.862 3.155 8.979 7.528 10.432.55.1.75-.238.75-.53 0-.26-.01-1.126-.013-2.046-3.06.665-3.708-.74-3.943-1.419-.132-.337-.7-1.419-1.196-1.706-.408-.22-.99-.764-.015-.778.917-.013 1.572.845 1.79 1.194 1.048 1.761 2.722 1.267 3.387.967.105-.757.41-1.267.746-1.558-2.59-.293-5.303-1.297-5.303-5.76 0-1.27.453-2.315 1.194-3.131-.12-.293-.518-1.482.115-3.088 0 0 .975-.312 3.194 1.194A11.125 11.125 0 0120 13.61c.986.005 1.98.132 2.906.394 2.218-1.506 3.192-1.194 3.192-1.194.634 1.606.235 2.795.115 3.088.742.816 1.193 1.861 1.193 3.131 0 4.474-2.718 5.464-5.308 5.75.418.36.79 1.07.79 2.157 0 1.558-.013 2.813-.013 3.196 0 .293.197.637.757.528C27.847 28.974 31 24.86 31 20c0-6.075-4.925-11-11-11z" fill="#e5e7eb"/></svg></div>
+          <div class="tech-card__name">GitHub</div><div class="tech-card__cat">Source Control</div>
+        </div>
+        <div class="tech-card reveal reveal-delay-1" style="--tc:rgba(203,60,51,0.08)">
+          <div class="tech-card__icon"><svg viewBox="0 0 40 40" width="28" height="28" fill="none"><rect width="40" height="40" rx="8" fill="rgba(203,60,51,0.1)"/><text x="6" y="26" font-family="monospace" font-size="13" font-weight="700" fill="#cb3c33">.yml</text></svg></div>
+          <div class="tech-card__name">YAML</div><div class="tech-card__cat">Configuration</div>
+        </div>
+        <div class="tech-card reveal reveal-delay-2" style="--tc:rgba(87,157,220,0.08)">
+          <div class="tech-card__icon"><svg viewBox="0 0 40 40" width="28" height="28" fill="none"><rect width="40" height="40" rx="8" fill="rgba(87,157,220,0.12)"/><rect x="10" y="13" width="20" height="14" rx="3" stroke="#579ddc" stroke-width="2" fill="none"/><path d="M14 20 H26" stroke="#579ddc" stroke-width="2" stroke-linecap="round"/><circle cx="14" cy="20" r="2" fill="#579ddc"/><circle cx="26" cy="20" r="2" fill="#579ddc"/></svg></div>
+          <div class="tech-card__name">Containerd</div><div class="tech-card__cat">Runtime</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <hr class="divider" />
+
+  <!-- FEATURES -->
+  <section class="section" id="features" aria-labelledby="features-title">
+    <div class="container">
+      <div class="section-header section-header--center reveal">
+        <p class="section-eyebrow">Platform Capabilities</p>
+        <h2 class="section-title" id="features-title">Enterprise-Grade Features</h2>
+        <p class="section-subtitle">Every feature is designed for production workloads — not demo environments.</p>
+      </div>
+      <div class="features-grid">
+        {% set features = [
+          ("🐳","Containerized Microservices","Docker-based service isolation with optimised multi-stage builds and minimal attack surface.","rgba(13,183,237,0.12)","rgba(13,183,237,0.25)"),
+          ("🏗️","Infrastructure as Code","Declarative Terraform modules provision AWS VPCs, EKS clusters, node groups, IAM roles, and ECR registries.","rgba(94,56,204,0.12)","rgba(94,56,204,0.25)"),
+          ("🔄","GitOps Continuous Delivery","ArgoCD watches the Git repository and automatically syncs Kubernetes manifests, eliminating manual kubectl applies.","rgba(239,68,68,0.12)","rgba(239,68,68,0.25)"),
+          ("⚡","CI/CD Automation","GitHub Actions workflows trigger on push: build → scan → test → push image → update manifests → deploy.","rgba(35,197,94,0.12)","rgba(35,197,94,0.25)"),
+          ("🌍","Multi-Environment Deployments","Separate Helm value files and ArgoCD ApplicationSets handle dev, staging, and production with full parity.","rgba(59,130,246,0.12)","rgba(59,130,246,0.25)"),
+          ("📈","Horizontal Pod Autoscaling","HPA scales pods based on CPU and memory metrics collected by Prometheus, maintaining SLOs under load spikes.","rgba(6,182,212,0.12)","rgba(6,182,212,0.25)"),
+          ("🛡️","Container Security Scanning","Trivy scans every image in CI and blocks pipelines when HIGH or CRITICAL CVEs are detected.","rgba(0,164,228,0.12)","rgba(0,164,228,0.25)"),
+          ("🔐","Secrets Management","Kubernetes Secrets keep env vars injected at runtime — never baked into images or committed to Git.","rgba(245,158,11,0.12)","rgba(245,158,11,0.25)"),
+          ("☁️","Cloud Native Architecture","12-factor app principles, stateless pods, readiness/liveness probes, and graceful shutdown throughout.","rgba(255,153,0,0.12)","rgba(255,153,0,0.25)"),
+          ("📊","Observability Stack","Prometheus scrapes metrics, Grafana visualises SLIs/SLOs, and AlertManager fires alerts on threshold breaches.","rgba(231,75,38,0.12)","rgba(231,75,38,0.25)"),
+          ("🚀","Production Ready","Structured JSON logging, security headers, graceful error handling, and K8s health probes built-in.","rgba(16,185,129,0.12)","rgba(16,185,129,0.25)"),
+          ("🔁","DevSecOps Workflow","Security is shifted left — scanning, linting, and policy checks run in CI before any image is promoted.","rgba(139,92,246,0.12)","rgba(139,92,246,0.25)"),
+        ] %}
+        {% for icon,title,desc,bg,border in features %}
+        <div class="feature-card reveal">
+          <div class="feature-card__icon-wrap" style="background:{{ bg }};border:1px solid {{ border }}">{{ icon }}</div>
+          <h3 class="feature-card__title">{{ title }}</h3>
+          <p class="feature-card__desc">{{ desc }}</p>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+  </section>
+
+  <hr class="divider" />
+
+  <!-- ARCHITECTURE -->
+  <section class="arch-section" id="architecture" aria-labelledby="arch-title">
+    <div class="container">
+      <div class="section-header section-header--center reveal">
+        <p class="section-eyebrow">Platform Architecture</p>
+        <h2 class="section-title" id="arch-title">End-to-End CI/CD Pipeline</h2>
+        <p class="section-subtitle">From a git push to a running pod — every step automated and auditable.</p>
+      </div>
+      <div class="arch-diagram reveal">
+        <div class="arch-row"><div class="arch-node arch-node--highlight"><span class="arch-icon">👨‍💻</span> Developer</div></div>
+        <div class="arch-arrow" aria-hidden="true"><div class="arch-arrow__line"></div><div class="arch-arrow__tip"></div></div>
+        <div class="arch-row"><div class="arch-node"><span class="arch-icon">🐙</span> GitHub (<span style="font-family:var(--font-mono);font-size:0.78em">shivam535353</span>)</div></div>
+        <div class="arch-arrow" aria-hidden="true"><div class="arch-arrow__line"></div><div class="arch-arrow__tip"></div></div>
+        <div class="arch-row" style="gap:12px;flex-wrap:wrap;justify-content:center;">
+          <div class="arch-node arch-node--accent"><span class="arch-icon">⚡</span> GitHub Actions</div>
+          <div style="display:flex;align-items:center;color:var(--text-muted);font-size:0.75rem;padding:0 4px;">CI Pipeline</div>
+          <div class="arch-node arch-node--accent" style="border-color:rgba(0,164,228,0.4);background:rgba(0,164,228,0.08);"><span class="arch-icon">🛡️</span> Trivy Scan</div>
+        </div>
+        <div class="arch-arrow" aria-hidden="true"><div class="arch-arrow__line"></div><div class="arch-arrow__tip"></div></div>
+        <div class="arch-row"><div class="arch-node"><span class="arch-icon">🐳</span> Docker Build &amp; Push</div></div>
+        <div class="arch-arrow" aria-hidden="true"><div class="arch-arrow__line"></div><div class="arch-arrow__tip"></div></div>
+        <div class="arch-row"><div class="arch-node arch-node--purple"><span class="arch-icon">📦</span> Container Registry (ECR)</div></div>
+        <div class="arch-arrow" aria-hidden="true"><div class="arch-arrow__line"></div><div class="arch-arrow__tip"></div></div>
+        <div class="arch-row"><div class="arch-node arch-node--accent" style="border-color:rgba(239,68,68,0.4);background:rgba(239,68,68,0.08);"><span class="arch-icon">🔄</span> ArgoCD (GitOps)</div></div>
+        <div class="arch-arrow" aria-hidden="true"><div class="arch-arrow__line"></div><div class="arch-arrow__tip"></div></div>
+        <div class="arch-row" style="gap:12px;flex-wrap:wrap;justify-content:center;">
+          <div class="arch-node arch-node--highlight"><span class="arch-icon">☸️</span> Kubernetes (EKS)</div>
+          <div style="display:flex;align-items:center;color:var(--text-muted);font-size:0.75rem;padding:0 4px;">via</div>
+          <div class="arch-node" style="border-color:rgba(14,116,163,0.4);background:rgba(14,116,163,0.08);"><span class="arch-icon">⛵</span> Helm Charts</div>
+        </div>
+        <div class="arch-arrow" aria-hidden="true"><div class="arch-arrow__line"></div><div class="arch-arrow__tip"></div></div>
+        <div class="arch-row"><div class="arch-node arch-node--success"><span class="arch-icon">🚀</span> Application (Flask API)</div></div>
+        <div class="arch-arrow" aria-hidden="true"><div class="arch-arrow__line"></div><div class="arch-arrow__tip"></div></div>
+        <div class="arch-row" style="gap:12px;flex-wrap:wrap;justify-content:center;">
+          <div class="arch-node" style="border-color:rgba(231,75,38,0.4);background:rgba(231,75,38,0.08);"><span class="arch-icon">📊</span> Prometheus</div>
+          <div style="display:flex;align-items:center;color:var(--text-muted);font-size:0.75rem;padding:0 4px;">→</div>
+          <div class="arch-node" style="border-color:rgba(240,100,50,0.4);background:rgba(240,100,50,0.08);"><span class="arch-icon">📈</span> Grafana</div>
+        </div>
+        <div class="arch-arrow" aria-hidden="true"><div class="arch-arrow__line"></div><div class="arch-arrow__tip"></div></div>
+        <div class="arch-row"><div class="arch-node" style="border-color:rgba(255,153,0,0.4);background:rgba(255,153,0,0.08);"><span class="arch-icon">☁️</span> AWS EKS Cluster</div></div>
+      </div>
+    </div>
+  </section>
+
+  <hr class="divider" />
+
+  <!-- STATUS -->
+  <section class="section" id="status" aria-labelledby="status-title">
+    <div class="container">
+      <div class="section-header reveal">
+        <p class="section-eyebrow">Live Status</p>
+        <h2 class="section-title" id="status-title">Platform Health</h2>
+        <p class="section-subtitle">
+          Real-time data from <code class="mono" style="font-size:0.9em;color:var(--color-brand);">/health</code>,
+          polled every 30 seconds.
+        </p>
+      </div>
+      <div class="status-grid">
+        <div class="status-item reveal reveal-delay-1"><span class="status-item__key">Backend Status</span><span class="status-item__val" id="status-backend">Running</span></div>
+        <div class="status-item reveal reveal-delay-2"><span class="status-item__key">Environment</span><span class="status-item__val" id="status-env" style="color:var(--color-accent);">{{ env }}</span></div>
+        <div class="status-item reveal reveal-delay-3"><span class="status-item__key">Framework</span><span class="status-item__val" style="color:var(--color-brand);">Flask</span></div>
+        <div class="status-item reveal reveal-delay-4"><span class="status-item__key">API Version</span><span class="status-item__val" style="color:var(--color-purple);">{{ api_version }}</span></div>
+        <div class="status-item reveal reveal-delay-1"><span class="status-item__key">Cloud Platform</span><span class="status-item__val" style="color:var(--color-warning);">{{ cloud_platform }}</span></div>
+        <div class="status-item reveal reveal-delay-2"><span class="status-item__key">Kubernetes</span><span class="status-item__val">Ready</span></div>
+        <div class="status-item reveal reveal-delay-3"><span class="status-item__key">Docker</span><span class="status-item__val">Ready</span></div>
+        <div class="status-item reveal reveal-delay-4"><span class="status-item__key">Uptime</span><span class="status-item__val" id="status-uptime" style="color:var(--color-accent);">—</span></div>
+      </div>
+    </div>
+  </section>
+
+  <hr class="divider" />
+
+  <!-- API REFERENCE -->
+  <section class="section" id="api" aria-labelledby="api-title">
+    <div class="container">
+      <div class="section-header reveal">
+        <p class="section-eyebrow">REST API</p>
+        <h2 class="section-title" id="api-title">API Endpoints</h2>
+        <p class="section-subtitle">Click a path to copy the full URL. Click a row to open the endpoint.</p>
+      </div>
+      <div class="api-grid reveal">
+        <div class="api-row" data-href="/" role="link" tabindex="0"><span class="api-method api-method--get">GET</span><span class="api-path">/</span><span class="api-desc">Platform dashboard — the page you're on now</span><span class="api-arrow" aria-hidden="true">↗</span></div>
+        <div class="api-row" data-href="/health" role="link" tabindex="0"><span class="api-method api-method--get">GET</span><span class="api-path">/health</span><span class="api-desc">Kubernetes liveness &amp; readiness probe</span><span class="api-arrow" aria-hidden="true">↗</span></div>
+        <div class="api-row" data-href="/info" role="link" tabindex="0"><span class="api-method api-method--get">GET</span><span class="api-path">/info</span><span class="api-desc">Complete project and deployment metadata</span><span class="api-arrow" aria-hidden="true">↗</span></div>
+        <div class="api-row" data-href="/version" role="link" tabindex="0"><span class="api-method api-method--get">GET</span><span class="api-path">/version</span><span class="api-desc">App version, git commit, build date, Flask version</span><span class="api-arrow" aria-hidden="true">↗</span></div>
+        <div class="api-row" data-href="/metrics" role="link" tabindex="0"><span class="api-method api-method--get">GET</span><span class="api-path">/metrics</span><span class="api-desc">Runtime metrics — CPU, memory, request counts, uptime</span><span class="api-arrow" aria-hidden="true">↗</span></div>
+        <div class="api-row" data-href="/tech-stack" role="link" tabindex="0"><span class="api-method api-method--get">GET</span><span class="api-path">/tech-stack</span><span class="api-desc">Full technology stack with categories</span><span class="api-arrow" aria-hidden="true">↗</span></div>
+        <div class="api-row" data-href="/developer" role="link" tabindex="0"><span class="api-method api-method--get">GET</span><span class="api-path">/developer</span><span class="api-desc">Developer public profile and specialisations</span><span class="api-arrow" aria-hidden="true">↗</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer class="footer" role="contentinfo">
+    <div class="container footer__inner">
+      <div>
+        <div class="footer__brand">
+          <div class="topnav__logo-mark" style="width:26px;height:26px;font-size:0.75rem;" aria-hidden="true">DP</div>
+          production-grade-devops-platform
+        </div>
+        <p class="footer__copy" style="margin-top:6px;">
+          Designed &amp; Developed by <strong class="footer__dev">{{ developer_name }}</strong><br />
+          <span style="font-size:0.78rem;">{{ developer_role }}</span>
+        </p>
+      </div>
+      <div>
+        <p class="footer__copy" style="text-align:right;">
+          &copy; 2026 · <a href="{{ repo_url }}" target="_blank" rel="noopener noreferrer" style="color:var(--text-muted);">shivam535353/production-grade-devops-platform</a><br />
+          <span style="font-family:var(--font-mono);font-size:0.75rem;color:var(--text-muted);">
+            v{{ app_version }} · {{ api_version }} · {{ env }}
+          </span>
+        </p>
+        <div class="footer__links" style="margin-top:8px;justify-content:flex-end;">
+          <a href="/health"    class="footer__link">Health</a>
+          <a href="/info"      class="footer__link">Info</a>
+          <a href="/metrics"   class="footer__link">Metrics</a>
+          <a href="/version"   class="footer__link">Version</a>
+          <a href="{{ repo_url }}" class="footer__link" target="_blank" rel="noopener noreferrer">GitHub ↗</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <script src="{{ url_for('static', filename='js/main.js') }}" defer></script>
+</body>
+</html>

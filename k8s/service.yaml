@@ -1,11 +1,24 @@
+# =============================================================================
+# production-grade-devops-platform — Kubernetes Service
+# =============================================================================
+
 apiVersion: v1
 kind: Service
-metadata.name: clouddeploy-service
+metadata:
+  name: devops-platform-svc
+  namespace: default
+  labels:
+    app: devops-platform
+  annotations:
+    prometheus.io/scrape: "true"
+    prometheus.io/port: "5000"
+    prometheus.io/path: "/metrics"
 spec:
-  type: NodePort
+  type: ClusterIP
   selector:
-    app: clouddeploy-backend
+    app: devops-platform
   ports:
-    - port: 5000
+    - name: http
+      protocol: TCP
+      port: 80
       targetPort: 5000
-      nodePort: 30007

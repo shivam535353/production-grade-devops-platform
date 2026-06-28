@@ -1,29 +1,113 @@
+# =============================================================================
+# production-grade-devops-platform — Kubernetes Deployment
+# GitHub : https://github.com/shivam535353/production-grade-devops-platform
+# =============================================================================
+
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: clouddeploy-backend
+  name: devops-platform
+  namespace: default
   labels:
-    app: clouddeploy-backend
+    app: devops-platform
+    version: "1.0.0"
+    managed-by: argocd
+  annotations:
+    deployment.kubernetes.io/revision: "1"
+    git-repo: "https://github.com/shivam535353/production-grade-devops-platform"
 spec:
   replicas: 2
   selector:
     matchLabels:
-      app: clouddeploy-backend
+      app: devops-platform
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
   template:
     metadata:
       labels:
-        app: clouddeploy-backend
+        app: devops-platform
+        version: "1.0.0"
     spec:
+      # Security context for the pod
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1001
+        runAsGroup: 1001
+        fsGroup: 1001
+
       containers:
-        - name: clouddeploy-backend
-          image: clouddeploy-app:v1
-          imagePullPolicy: Never
+        - name: devops-platform
+          image: ghcr.io/shivam535353/production-grade-devops-platform:latest
+          imagePullPolicy: Always
           ports:
-            - containerPort: 5000
+            - name: http
+              containerPort: 5000
+              protocol: TCP
+
+          env:
+            - name: APP_ENV
+              value: "production"
+            - name: GIT_COMMIT
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.annotations['git-commit']
+            - name: SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: devops-platform-secrets
+                  key: secret-key
+
+          # Resource limits — tune per your node size
           resources:
             requests:
-              memory: "128Mi"
               cpu: "100m"
+              memory: "128Mi"
             limits:
+              cpu: "500m"
               memory: "256Mi"
-              cpu: "250m"
+
+          # Kubernetes health probes
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 5000
+            initialDelaySeconds: 10
+            periodSeconds: 30
+            timeoutSeconds: 5
+            failureThreshold: 3
+
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 5000
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            timeoutSeconds: 3
+            failureThreshold: 3
+
+          # Container security context
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: false
+            capabilities:
+              drop:
+                - ALL
+
+      # Spread pods across nodes for HA
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              podAffinityTerm:
+                labelSelector:
+                  matchExpressions:
+                    - key: app
+                      operator: In
+                      values:
+                        - devops-platform
+                topologyKey: kubernetes.io/hostname
+
+      terminationGracePeriodSeconds: 30
