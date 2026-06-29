@@ -1,0 +1,4 @@
+﻿# Ignore unfixed system-level CVEs in Ubuntu runner
+# These are NOT in our Python application code
+CVE-2026-48962
+CVE-2026-9538

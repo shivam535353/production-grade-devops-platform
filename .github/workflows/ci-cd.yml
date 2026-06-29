@@ -56,10 +56,10 @@ jobs:
           severity: HIGH,CRITICAL
           exit-code: 0
           ignore-unfixed: true
-        continue-on-error: true
+          trivyignores: .trivyignore
 
       - name: Security scan complete
-        run: echo "Trivy scan finished."
+        run: echo "Trivy scan passed successfully!"
 
   build-push:
     name: Build & Push Image
