@@ -39,9 +39,11 @@ ingress:
         - path: /
           pathType: Prefix
 
-env:
-  APP_ENV: "production"
-  CLOUD_PLATFORM: "AWS EKS"
+configMap:
+  data:
+    APP_ENV: "production"
+    LOG_LEVEL: "info"
+    CLOUD_PLATFORM: "AWS EKS"
 
 secret:
   secretKey: "CHANGE_ME_IN_CI_CD_PIPELINE"   # Real value injected via GitHub Secrets / AWS Secrets Manager
