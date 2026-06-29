@@ -24,9 +24,11 @@ autoscaling:
 ingress:
   enabled: false
 
-env:
-  APP_ENV: "development"
-  CLOUD_PLATFORM: "Minikube"
+configMap:
+  data:
+    APP_ENV: "development"
+    LOG_LEVEL: "debug"
+    CLOUD_PLATFORM: "Minikube"
 
 secret:
   secretKey: "local-dev-secret-12345"
