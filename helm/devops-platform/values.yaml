@@ -100,11 +100,20 @@ resources:
 # Autoscaling (HPA)
 # -----------------------------------------------------------------------------
 autoscaling:
-  enabled: false
+  enabled: true
   minReplicas: 2
   maxReplicas: 10
   targetCPUUtilizationPercentage: 70
   targetMemoryUtilizationPercentage: 80
+  behavior:
+    scaleUp:
+      stabilizationWindowSeconds: 30
+      podsValue: 2
+      periodSeconds: 60
+    scaleDown:
+      stabilizationWindowSeconds: 300
+      podsValue: 1
+      periodSeconds: 120
 
 # -----------------------------------------------------------------------------
 # Probes
@@ -135,13 +144,17 @@ env:
 # -----------------------------------------------------------------------------
 configMap:
   enabled: true
+  data:
+    APP_ENV: "production"
+    LOG_LEVEL: "info"
+    CLOUD_PLATFORM: "AWS EKS"
 
 # -----------------------------------------------------------------------------
 # Secret (values injected via --set or CI/CD, never hardcoded here)
 # -----------------------------------------------------------------------------
 secret:
   enabled: true
-  secretKey: "local-dev-secret-change-me"
+  secretKey: "change-me-local-dev-only"
 
 # -----------------------------------------------------------------------------
 # Node Scheduling
