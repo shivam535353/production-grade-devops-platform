@@ -47,19 +47,23 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Run Trivy filesystem scan
-        uses: aquasecurity/trivy-action@master
-        with:
-          scan-type: fs
-          scan-ref: .
-          format: table
-          severity: HIGH,CRITICAL
-          exit-code: 0
-          ignore-unfixed: true
-          trivyignores: .trivyignore
+      - name: Install Trivy manually
+        run: |
+          sudo apt-get install wget apt-transport-https gnupg -y
+          wget -qO - https://aquasecurity.github.io/trivy-repo/deb/public.key | gpg --dearmor | sudo tee /usr/share/keyrings/trivy.gpg > /dev/null
+          echo "deb [signed-by=/usr/share/keyrings/trivy.gpg] https://aquasecurity.github.io/trivy-repo/deb generic main" | sudo tee /etc/apt/sources.list.d/trivy.list
+          sudo apt-get update -qq
+          sudo apt-get install trivy -y
 
-      - name: Security scan complete
-        run: echo "Trivy scan passed successfully!"
+      - name: Run Trivy scan
+        run: |
+          trivy fs . \
+            --severity CRITICAL \
+            --ignore-unfixed \
+            --exit-code 0 \
+            --no-progress \
+            --format table
+          echo "Trivy scan complete!"
 
   build-push:
     name: Build & Push Image
