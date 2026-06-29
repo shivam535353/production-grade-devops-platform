@@ -38,18 +38,14 @@ spec:
             - name: http
               containerPort: {{ .Values.service.targetPort }}
               protocol: TCP
+          {{- if .Values.secret.enabled }}
           env:
-            {{- range $key, $value := .Values.env }}
-            - name: {{ $key }}
-              value: {{ $value | quote }}
-            {{- end }}
-            {{- if .Values.secret.enabled }}
             - name: SECRET_KEY
               valueFrom:
                 secretKeyRef:
                   name: {{ include "devops-platform.fullname" . }}-secret
                   key: secret-key
-            {{- end }}
+          {{- end }}   
           {{- if .Values.configMap.enabled }}
           envFrom:
             - configMapRef:
