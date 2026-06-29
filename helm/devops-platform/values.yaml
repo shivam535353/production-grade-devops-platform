@@ -133,13 +133,6 @@ readinessProbe:
   failureThreshold: 3
 
 # -----------------------------------------------------------------------------
-# Environment Variables (non-secret)
-# -----------------------------------------------------------------------------
-env:
-  APP_ENV: "development"
-  CLOUD_PLATFORM: "Minikube"
-
-# -----------------------------------------------------------------------------
 # ConfigMap data
 # -----------------------------------------------------------------------------
 configMap:
@@ -147,7 +140,7 @@ configMap:
   data:
     APP_ENV: "production"
     LOG_LEVEL: "info"
-    CLOUD_PLATFORM: "AWS EKS"
+    CLOUD_PLATFORM: "Minikube"
 
 # -----------------------------------------------------------------------------
 # Secret (values injected via --set or CI/CD, never hardcoded here)
