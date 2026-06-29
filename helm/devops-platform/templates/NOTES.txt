@@ -1,0 +1,25 @@
+🚀 {{ .Chart.Name }} has been deployed!
+
+Release Name : {{ .Release.Name }}
+Namespace    : {{ .Release.Namespace }}
+Chart Version: {{ .Chart.Version }}
+App Version  : {{ .Chart.AppVersion }}
+
+To check the status of your pods:
+  kubectl get pods -n {{ .Release.Namespace }} -l app.kubernetes.io/instance={{ .Release.Name }}
+
+To check the service:
+  kubectl get svc -n {{ .Release.Namespace }}
+
+{{- if .Values.ingress.enabled }}
+To access the application (Ingress enabled):
+{{- range .Values.ingress.hosts }}
+  http://{{ .host }}
+{{- end }}
+{{- else }}
+To access the application locally (Ingress disabled), run:
+  kubectl port-forward svc/{{ .Release.Name }}-devops-platform 5000:{{ .Values.service.port }} -n {{ .Release.Namespace }}
+Then open: http://localhost:5000
+{{- end }}
+
+Happy Shipping! 🎯
