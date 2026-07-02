@@ -31,4 +31,4 @@
 # Use: https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/ha/install.yaml
 # argocd-server: 2 replicas
 # argocd-repo-server: 2 replicas
-# redis-ha: 3 replicas (Sentinel mode)
+# redis-ha: 3 replicas (Sentinel mode)cd 
