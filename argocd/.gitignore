@@ -1,0 +1,3 @@
+# CLI binaries
+*.exe
+argocd-windows-amd64.exe
