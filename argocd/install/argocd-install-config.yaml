@@ -1,0 +1,34 @@
+# =============================================================================
+# ArgoCD Installation Reference
+# This file documents how ArgoCD is installed on this cluster.
+# =============================================================================
+
+# Installation Command:
+# kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
+
+# Namespace: argocd
+# Version: stable (check exact version with: kubectl exec -n argocd deployment/argocd-server -- argocd version --client)
+
+# Components installed:
+# - argocd-server (UI + API)
+# - argocd-repo-server (Git + Helm rendering)
+# - argocd-application-controller (Reconciliation)
+# - argocd-dex-server (Authentication)
+# - argocd-redis (Caching)
+# - argocd-notifications-controller (Alerts)
+
+# Resource Summary:
+# Namespace: argocd
+# CRDs: applications.argoproj.io, applicationsets.argoproj.io, appprojects.argoproj.io
+
+# Post-install steps:
+# 1. Port-forward argocd-server (Section 3)
+# 2. Get initial admin password (Section 3)
+# 3. Create AppProject (Section 9)
+# 4. Create Application (Section 6)
+
+# HA Production Notes (AWS EKS):
+# Use: https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/ha/install.yaml
+# argocd-server: 2 replicas
+# argocd-repo-server: 2 replicas
+# redis-ha: 3 replicas (Sentinel mode)
