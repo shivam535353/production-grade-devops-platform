@@ -1,0 +1,69 @@
+# =============================================================================
+# ArgoCD Application — Production Environment
+# Deploys Helm chart from GitHub to production namespace
+# NOTE: Production मध्ये automated sync बंद (manual approval required)
+# =============================================================================
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: devops-platform-prod
+  namespace: argocd
+  labels:
+    app.kubernetes.io/name: devops-platform
+    app.kubernetes.io/instance: production
+    app.kubernetes.io/managed-by: argocd
+    environment: production
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  # ---------------------------------------------------------------------------
+  # Project
+  # ---------------------------------------------------------------------------
+  project: default
+
+  # ---------------------------------------------------------------------------
+  # Source
+  # ---------------------------------------------------------------------------
+  source:
+    repoURL: https://github.com/shivam535353/production-grade-devops-platform.git
+    targetRevision: main
+    path: helm/devops-platform
+
+    helm:
+      releaseName: devops-platform
+      valueFiles:
+        - values.yaml
+        - values-prod.yaml
+
+  # ---------------------------------------------------------------------------
+  # Destination
+  # ---------------------------------------------------------------------------
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: production
+
+  # ---------------------------------------------------------------------------
+  # Sync Policy — Production मध्ये MANUAL sync (no automated)
+  # Real companies मध्ये prod ला human approval लागतो
+  # ---------------------------------------------------------------------------
+  syncPolicy:
+    syncOptions:
+      - CreateNamespace=true
+      - PrunePropagationPolicy=foreground
+      - PruneLast=true
+      - RespectIgnoreDifferences=true
+
+    retry:
+      limit: 3
+      backoff:
+        duration: 10s
+        factor: 2
+        maxDuration: 5m
+
+  ignoreDifferences:
+    - group: apps
+      kind: Deployment
+      jsonPointers:
+        - /spec/replicas

@@ -1,0 +1,73 @@
+# =============================================================================
+# ArgoCD Application — Development Environment
+# Deploys Helm chart from GitHub to dev namespace on Minikube
+# =============================================================================
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: devops-platform-dev
+  namespace: argocd
+  labels:
+    app.kubernetes.io/name: devops-platform
+    app.kubernetes.io/instance: dev
+    app.kubernetes.io/managed-by: argocd
+    environment: dev
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  # ---------------------------------------------------------------------------
+  # Project — default (Section 9 मध्ये custom project बनवू)
+  # ---------------------------------------------------------------------------
+  project: default
+
+  # ---------------------------------------------------------------------------
+  # Source — GitHub Repository + Helm Chart Path
+  # ---------------------------------------------------------------------------
+  source:
+    repoURL: https://github.com/shivam535353/production-grade-devops-platform.git
+    targetRevision: main
+    path: helm/devops-platform
+
+    # Helm specific configuration
+    helm:
+      releaseName: devops-platform
+      valueFiles:
+        - values.yaml
+        - values-dev.yaml
+
+  # ---------------------------------------------------------------------------
+  # Destination — Which cluster + namespace
+  # ---------------------------------------------------------------------------
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: dev
+
+  # ---------------------------------------------------------------------------
+  # Sync Policy — Auto Sync + Self Heal + Prune
+  # ---------------------------------------------------------------------------
+  syncPolicy:
+    automated:
+      prune: true       # Git मधून delete केलेल्या resources cluster मधूनही delete होतात
+      selfHeal: true    # Manual cluster changes automatically revert होतात
+      allowEmpty: false # Empty application sync होत नाही (safety)
+
+    syncOptions:
+      - CreateNamespace=true          # Namespace नसेल तर automatically create करतो
+      - PrunePropagationPolicy=foreground
+      - PruneLast=true                # Prune सर्वात शेवटी होतं (safe deletion)
+      - RespectIgnoreDifferences=true
+
+    retry:
+      limit: 5                        # 5 वेळा retry
+      backoff:
+        duration: 5s                  # पहिला retry 5 seconds नंतर
+        factor: 2                     # प्रत्येक retry double होतो (5s, 10s, 20s...)
+        maxDuration: 3m               # Maximum 3 minutes wait
+
+  # ---------------------------------------------------------------------------
+  # Ignore Differences — काही fields ArgoCD ignore करेल
+  # (e.g., Kubernetes automatically काही fields add करतो)
+  # ---------------------------------------------------------------------------
+    # HPA replicas manage करतो, ArgoCD ignore करेल
