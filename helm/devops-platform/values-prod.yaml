@@ -6,8 +6,8 @@ namespace: production
 
 image:
   repository: ghcr.io/shivam535353/production-grade-devops-platform
-  tag: "latest"
-  pullPolicy: Always
+  tag: "v1"
+  pullPolicy: Never
 
 replicaCount: 3
 
