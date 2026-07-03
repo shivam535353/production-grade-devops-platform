@@ -14,6 +14,7 @@ from src.routes.version import version_bp
 from src.routes.metrics import metrics_bp
 from src.routes.tech_stack import tech_stack_bp
 from src.routes.developer import developer_bp
+from src.routes.gitops_demo import gitops_demo_bp
 
 
 def _configure_logging(app):
@@ -71,7 +72,7 @@ def create_app(env=None):
     _register_error_handlers(app)
 
     for bp in [home_bp, health_bp, info_bp, version_bp,
-               metrics_bp, tech_stack_bp, developer_bp]:
+               metrics_bp, tech_stack_bp, developer_bp, gitops_demo_bp]:
         app.register_blueprint(bp)
         app.logger.debug("Registered blueprint: %s", bp.name)
 
