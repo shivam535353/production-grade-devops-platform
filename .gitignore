@@ -1,1 +1,6 @@
 argocd-windows-amd64.exe
+# Raw/plaintext secrets — NEVER commit
+/tmp/
+*raw-secret*
+*-actual.yaml
+values-prod-secrets.yaml

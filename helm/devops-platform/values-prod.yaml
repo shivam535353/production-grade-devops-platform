@@ -47,6 +47,7 @@ configMap:
     CLOUD_PLATFORM: "AWS EKS"
 
 secret:
+  enabled: false    # Sealed Secrets handle
   secretKey: "CHANGE_ME_IN_CI_CD_PIPELINE"   # Real value injected via GitHub Secrets / AWS Secrets Manager
 
 quota:

@@ -34,4 +34,5 @@ configMap:
     FEATURE_FLAG_NEW_UI: "true" 
 
 secret:
+  enabled: false  
   secretKey: "local-dev-secret-12345"
