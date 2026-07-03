@@ -5,7 +5,7 @@
 namespace: production
 
 image:
-  repository: ghcr.io/shivam535353/production-grade-devops-platform
+  repository: production-grade-devops-platform
   tag: "v1"
   pullPolicy: Never
 
