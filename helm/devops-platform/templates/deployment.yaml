@@ -40,7 +40,7 @@ spec:
               protocol: TCP
           {{- if .Values.secret.enabled }}
           env:
-            - name: devops-platform-secret
+            - name: SECRET_KEY
               valueFrom:
                 secretKeyRef:
                   name: {{ include "devops-platform.fullname" . }}-secret
