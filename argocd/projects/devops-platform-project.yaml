@@ -1,0 +1,63 @@
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: devops-platform-project
+  namespace: argocd
+spec:
+  description: "Project boundary for devops-platform across dev and production"
+
+  sourceRepos:
+    - https://github.com/shivam535353/production-grade-devops-platform.git
+
+  destinations:
+    - server: https://kubernetes.default.svc
+      namespace: dev
+    - server: https://kubernetes.default.svc
+      namespace: production
+
+  namespaceResourceWhitelist:
+    - group: "apps"
+      kind: Deployment
+    - group: ""
+      kind: Service
+    - group: ""
+      kind: ConfigMap
+    - group: ""
+      kind: Secret
+    - group: "networking.k8s.io"
+      kind: Ingress
+    - group: "autoscaling"
+      kind: HorizontalPodAutoscaler
+    - group: ""
+      kind: ServiceAccount
+
+  clusterResourceWhitelist: []
+
+  roles:
+    - name: dev-team
+      description: "Can sync dev, read-only on prod"
+      policies:
+        - p, proj:devops-platform-project:dev-team, applications, sync, devops-platform-project/devops-platform-dev, allow
+        - p, proj:devops-platform-project:dev-team, applications, get, devops-platform-project/*, allow
+      groups:
+        - flask-dev-engineers
+
+    - name: prod-deployers
+      description: "Can sync prod (manual gate)"
+      policies:
+        - p, proj:devops-platform-project:prod-deployers, applications, sync, devops-platform-project/devops-platform-prod, allow
+      groups:
+        - flask-release-managers
+
+  syncWindows:
+    - kind: allow
+      schedule: "0 9-17 * * 1-5"
+      duration: 8h
+      applications:
+        - devops-platform-prod
+      manualSync: true
+    - kind: deny
+      schedule: "0 0 * * 6,0"
+      duration: 24h
+      applications:
+        - devops-platform-prod

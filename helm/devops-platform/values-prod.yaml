@@ -48,3 +48,10 @@ configMap:
 
 secret:
   secretKey: "CHANGE_ME_IN_CI_CD_PIPELINE"   # Real value injected via GitHub Secrets / AWS Secrets Manager
+
+quota:
+  requestsCpu: "4"
+  requestsMemory: "8Gi"
+  limitsCpu: "8"
+  limitsMemory: "16Gi"
+  maxPods: "30" 

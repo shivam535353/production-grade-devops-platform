@@ -20,7 +20,7 @@ spec:
   # ---------------------------------------------------------------------------
   # Project — default (Section 9 मध्ये custom project बनवू)
   # ---------------------------------------------------------------------------
-  project: default
+  project: devops-platform-project
 
   # ---------------------------------------------------------------------------
   # Source — GitHub Repository + Helm Chart Path

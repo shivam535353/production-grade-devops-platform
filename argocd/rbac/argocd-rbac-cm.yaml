@@ -1,0 +1,19 @@
+# argocd/rbac/argocd-rbac-cm.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: argocd-rbac-cm
+  namespace: argocd
+data:
+  policy.default: role:readonly
+  policy.csv: |
+    p, role:dev-team, applications, sync, devops-platform-project/devops-platform-dev, allow
+    p, role:dev-team, applications, get, devops-platform-project/*, allow
+    p, role:dev-team, logs, get, devops-platform-project/*, allow
+
+    p, role:release-manager, applications, sync, devops-platform-project/devops-platform-prod, allow
+    p, role:release-manager, applications, get, devops-platform-project/*, allow
+    p, role:release-manager, applications, rollback, devops-platform-project/devops-platform-prod, allow
+
+    g, admin, role:admin
+  scopes: '[groups]'
