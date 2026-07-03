@@ -29,6 +29,8 @@ configMap:
     APP_ENV: "development"
     LOG_LEVEL: "debug"
     CLOUD_PLATFORM: "Minikube"
+    GITOPS_ENABLED: "true"        # ← line add 
+    DEMO_VERSION: "section-7"  
 
 secret:
   secretKey: "local-dev-secret-12345"
