@@ -5,7 +5,7 @@
 namespace: dev
 
 image:
-  tag: "v2"
+  tag: "v3"
   pullPolicy: Never        # Minikube local image — never pull from registry
 
 replicaCount: 2
