@@ -10,6 +10,11 @@ gitops_demo_bp = Blueprint("gitops_demo", __name__)
 
 @gitops_demo_bp.route("/gitops-demo", methods=["GET"])
 def gitops_demo():
+    # INTENTIONAL BUG — divide by zero (simulate bad deployment)
+    result = 1 / 0    # ← हे add केलं
+    return jsonify({
+        "message": "This will never reach here",
+    }), 200
     return jsonify({
         "message": "🚀 This endpoint was deployed via GitOps!",
         "workflow": {
