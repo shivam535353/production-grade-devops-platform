@@ -1,6 +1,6 @@
 """
 GitOps Demo Route
-ArgoCD auto-deploy demonstrate करण्यासाठी नवीन endpoint
+ArgoCD auto-deploy demonstrate endpoint
 """
 from flask import Blueprint, jsonify
 from datetime import datetime, timezone
