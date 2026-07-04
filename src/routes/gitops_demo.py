@@ -20,5 +20,5 @@ def gitops_demo():
         },
         "deployed_at": datetime.now(timezone.utc).isoformat(),
         "gitops_tool": "ArgoCD",
-        "status": "success"
+        "status": "success finally"
     }), 200
