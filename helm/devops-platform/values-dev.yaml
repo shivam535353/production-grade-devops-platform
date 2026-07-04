@@ -8,7 +8,7 @@ image:
   tag:  "v3" 
   pullPolicy: Never        # Minikube local image — never pull from registry
 
-replicaCount:999
+replicaCount: 2
 
 resources:
   requests:
