@@ -14,7 +14,6 @@ def gitops_demo():
     # ---------------------------------------------------------
     # INTENTIONAL BUG
     # This simulates a bad deployment for the GitOps rollback demo.
-    # ---------------------------------------------------------
     result = 1 / 0
 
     # This code will never execute.
