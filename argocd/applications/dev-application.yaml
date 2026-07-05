@@ -13,7 +13,7 @@ metadata:
     app.kubernetes.io/managed-by: argocd
     environment: dev
   annotations:
-    argocd.argoproj.io/sync-wave: "0"
+   argocd.argoproj.io/sync-wave: "0"
   finalizers:
     - resources-finalizer.argocd.argoproj.io
 spec:
@@ -66,6 +66,7 @@ spec:
         factor: 2                     # प्रत्येक retry double होतो (5s, 10s, 20s...)
         maxDuration: 3m               # Maximum 3 minutes wait
 
+  
   # ---------------------------------------------------------------------------
   # Ignore Differences — काही fields ArgoCD ignore करेल
   # (e.g., Kubernetes automatically काही fields add करतो)
