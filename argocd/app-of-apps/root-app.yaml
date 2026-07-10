@@ -1,0 +1,47 @@
+# =============================================================================
+# App of Apps — Root Application
+# He "parent" application ahe jo sagalya child applications manage karto
+# ArgoCD → he file watch karto → child apps automatically create/update hota
+# =============================================================================
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: root-app
+  namespace: argocd
+  labels:
+    app.kubernetes.io/name: root-app
+    app.kubernetes.io/managed-by: argocd
+    pattern: app-of-apps
+  annotations:
+    argocd.argoproj.io/sync-wave: "-1"    # Child apps peksha aadhi sync ho
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: devops-platform-project
+
+  # ---------------------------------------------------------------------------
+  # Source — argocd/applications/ folder watch karto
+  # Ithely sagale yaml files = child ArgoCD Applications
+  # ---------------------------------------------------------------------------
+  source:
+    repoURL: https://github.com/shivam535353/production-grade-devops-platform.git
+    targetRevision: main
+    path: argocd/applications            # ha folder watch karto
+
+  # ---------------------------------------------------------------------------
+  # Destination — ArgoCD namespace madhe Applications create hot
+  # (cluster madhe apps deploy hote nahi — ArgoCD objects banvte)
+  # ---------------------------------------------------------------------------
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: argocd                    # Applications argocd namespace madhe
+
+  # ---------------------------------------------------------------------------
+  # Sync Policy
+  # ---------------------------------------------------------------------------
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
