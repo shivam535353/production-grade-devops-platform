@@ -1,0 +1,29 @@
+# =============================================================================
+# Test Application — App of Apps demo sathi
+# He file add kelyas root-app automatically new app create karto
+# =============================================================================
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: test-demo-app
+  namespace: argocd
+  labels:
+    environment: dev
+    demo: app-of-apps
+spec:
+  project: devops-platform-project
+  source:
+    repoURL: https://github.com/shivam535353/production-grade-devops-platform.git
+    targetRevision: main
+    path: helm/devops-platform
+    helm:
+      releaseName: test-demo
+      valueFiles:
+        - values.yaml
+        - values-dev.yaml
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: dev
+  syncPolicy:
+    syncOptions:
+      - CreateNamespace=true
