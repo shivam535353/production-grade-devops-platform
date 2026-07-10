@@ -1,0 +1,92 @@
+# =============================================================================
+# ApplicationSet — devops-platform
+# Ekach template → multiple environments sathi automatically Applications generate
+# Generator: List (simple environment list)
+# =============================================================================
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: devops-platform-appset
+  namespace: argocd
+  labels:
+    app.kubernetes.io/name: devops-platform-appset
+    app.kubernetes.io/managed-by: argocd
+spec:
+  # ---------------------------------------------------------------------------
+  # Generator — environments chi list
+  # Pratyeka entry sathi ek Application generate hoto
+  # ---------------------------------------------------------------------------
+  generators:
+    - list:
+        elements:
+          - environment: dev
+            namespace: dev
+            imageTag: "v2"
+            replicaCount: "2"
+            logLevel: debug
+            syncPolicy: automated
+
+          - environment: production
+            namespace: production
+            imageTag: "latest"
+            replicaCount: "3"
+            logLevel: info
+            syncPolicy: manual
+          - environment: staging           
+            namespace: staging
+            imageTag: "v2"
+            replicaCount: "2"
+            logLevel: info
+            syncPolicy: automated  
+
+  # ---------------------------------------------------------------------------
+  # Template — Application template
+  # {{environment}}, {{namespace}} etc. automatically replace hote
+  # ---------------------------------------------------------------------------
+  template:
+    metadata:
+      name: "devops-platform-{{environment}}-appset"    # dynamic name
+      namespace: argocd
+      labels:
+        app.kubernetes.io/name: devops-platform
+        app.kubernetes.io/instance: "{{environment}}"
+        environment: "{{environment}}"
+        managed-by-appset: "true"
+      annotations:
+        argocd.argoproj.io/sync-wave: "0"
+      finalizers:
+        - resources-finalizer.argocd.argoproj.io
+
+    spec:
+      project: devops-platform-project
+
+      source:
+        repoURL: https://github.com/shivam535353/production-grade-devops-platform.git
+        targetRevision: main
+        path: helm/devops-platform
+        helm:
+          releaseName: devops-platform
+          valueFiles:
+            - values.yaml
+            - "values-{{environment}}.yaml"    # dynamic values file!
+          parameters:
+            - name: image.tag
+              value: "{{imageTag}}"            # dynamic image tag
+            - name: replicaCount
+              value: "{{replicaCount}}"        # dynamic replicas
+
+      destination:
+        server: https://kubernetes.default.svc
+        namespace: "{{namespace}}"             # dynamic namespace
+
+      syncPolicy:
+        syncOptions:
+          - CreateNamespace=true
+          - PrunePropagationPolicy=foreground
+          - PruneLast=true
+        retry:
+          limit: 3
+          backoff:
+            duration: 5s
+            factor: 2
+            maxDuration: 3m
