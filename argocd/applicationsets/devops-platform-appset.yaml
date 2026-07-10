@@ -32,6 +32,7 @@ spec:
             replicaCount: "3"
             logLevel: info
             syncPolicy: manual
+            
           - environment: staging           
             namespace: staging
             imageTag: "v2"
