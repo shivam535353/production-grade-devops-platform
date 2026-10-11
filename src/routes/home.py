@@ -1,11 +1,15 @@
 """Home route — serves the dashboard HTML."""
+
 from flask import Blueprint, current_app, render_template
+
 home_bp = Blueprint("home", __name__)
+
 
 @home_bp.route("/", methods=["GET"])
 def index():
     current_app.logger.info("Dashboard requested")
-    return render_template("index.html",
+    return render_template(
+        "index.html",
         app_name=current_app.config["APP_NAME"],
         app_display_name=current_app.config["APP_DISPLAY_NAME"],
         app_tagline=current_app.config["APP_TAGLINE"],

@@ -4,7 +4,8 @@ GitHub : https://github.com/shivam535353/production-grade-devops-platform
 Author : Shivam Gadilkar
 """
 
-import logging, sys
+import logging
+import sys
 from flask import Flask, jsonify
 from src.config import get_config
 from src.routes.home import home_bp
@@ -20,10 +21,12 @@ from src.routes.gitops_demo import gitops_demo_bp
 def _configure_logging(app):
     handler = logging.StreamHandler(sys.stdout)
     handler.setLevel(logging.DEBUG if app.debug else logging.INFO)
-    handler.setFormatter(logging.Formatter(
-        "[%(asctime)s] %(levelname)-8s %(name)s — %(message)s",
-        datefmt="%Y-%m-%dT%H:%M:%S",
-    ))
+    handler.setFormatter(
+        logging.Formatter(
+            "[%(asctime)s] %(levelname)-8s %(name)s — %(message)s",
+            datefmt="%Y-%m-%dT%H:%M:%S",
+        )
+    )
     app.logger.handlers.clear()
     app.logger.addHandler(handler)
     app.logger.setLevel(handler.level)
@@ -33,30 +36,31 @@ def _configure_logging(app):
 def _register_error_handlers(app):
     @app.errorhandler(404)
     def not_found(exc):
-        return jsonify({"status": "error", "code": 404,
-                        "message": "Resource not found.",
-                        "hint": "Visit / for the dashboard."}), 404
+        return (
+            jsonify(
+                {"status": "error", "code": 404, "message": "Resource not found.", "hint": "Visit / for the dashboard."}
+            ),
+            404,
+        )
 
     @app.errorhandler(500)
     def internal_error(exc):
         app.logger.exception("500 — %s", exc)
-        return jsonify({"status": "error", "code": 500,
-                        "message": "An unexpected error occurred."}), 500
+        return jsonify({"status": "error", "code": 500, "message": "An unexpected error occurred."}), 500
 
     @app.errorhandler(405)
     def method_not_allowed(exc):
-        return jsonify({"status": "error", "code": 405,
-                        "message": "HTTP method not allowed."}), 405
+        return jsonify({"status": "error", "code": 405, "message": "HTTP method not allowed."}), 405
 
 
 def _register_security_headers(app):
     @app.after_request
     def add_headers(response):
         response.headers["X-Content-Type-Options"] = "nosniff"
-        response.headers["X-Frame-Options"]        = "DENY"
-        response.headers["X-XSS-Protection"]       = "1; mode=block"
-        response.headers["Referrer-Policy"]        = "strict-origin-when-cross-origin"
-        response.headers["Server"]                 = "DevOpsPlatform/1.0"
+        response.headers["X-Frame-Options"] = "DENY"
+        response.headers["X-XSS-Protection"] = "1; mode=block"
+        response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+        response.headers["Server"] = "DevOpsPlatform/1.0"
         return response
 
 
@@ -71,13 +75,11 @@ def create_app(env=None):
     _register_security_headers(app)
     _register_error_handlers(app)
 
-    for bp in [home_bp, health_bp, info_bp, version_bp,
-               metrics_bp, tech_stack_bp, developer_bp, gitops_demo_bp]:
+    for bp in [home_bp, health_bp, info_bp, version_bp, metrics_bp, tech_stack_bp, developer_bp, gitops_demo_bp]:
         app.register_blueprint(bp)
         app.logger.debug("Registered blueprint: %s", bp.name)
 
-    app.logger.info("DevOps Platform started — env=%s debug=%s",
-                    app.config["ENV"], app.debug)
+    app.logger.info("DevOps Platform started — env=%s debug=%s", app.config["ENV"], app.debug)
     return app
 
 
