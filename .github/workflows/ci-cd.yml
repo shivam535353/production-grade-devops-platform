@@ -307,3 +307,115 @@ jobs:
           docker inspect $IMAGE \
             --format='{{json .Config.Labels}}' | \
             python3 -m json.tool
+  # ---------------------------------------------------------------------------
+  # JOB 5: gitops-update — SECTION 9
+  # Update Helm values.yaml with new image tag → triggers ArgoCD auto-sync
+  # ---------------------------------------------------------------------------
+  gitops-update:
+    name: "🔄 GitOps — Update Helm Values"
+    runs-on: ubuntu-latest
+    needs: [build-push, verify-image]
+    # Only run on main branch push — not on PRs or develop branch
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+
+    steps:
+
+      # STEP 1: Checkout with PAT (not GITHUB_TOKEN)
+      # PAT is required because we need to push a commit back to the repo
+      # GITHUB_TOKEN cannot trigger subsequent workflow runs (GitHub security limitation)
+      - name: "📥 Checkout repository"
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.PAT_TOKEN }}
+          fetch-depth: 0
+          # fetch-depth: 0 → full git history (needed for accurate git log)
+
+      # STEP 2: Configure Git identity for the automated commit
+      - name: "🤖 Configure Git bot identity"
+        run: |
+          git config user.name "${{ secrets.GIT_USER_NAME }}"
+          git config user.email "${{ secrets.GIT_USER_EMAIL }}"
+        # Sets the author for the automated commit
+        # Shows as "github-actions[bot]" in git history — clearly identifiable
+
+      # STEP 3: Extract the short SHA tag that was built in Job 3
+      - name: "🏷️ Extract image tag"
+        id: image-tag
+        run: |
+          SHORT_SHA=$(echo "${{ github.sha }}" | cut -c1-7)
+          IMAGE_TAG="sha-${SHORT_SHA}"
+          echo "tag=${IMAGE_TAG}" >> $GITHUB_OUTPUT
+          echo "Image tag to deploy: ${IMAGE_TAG}"
+        # Reconstructs the exact same sha tag that build-push job created
+        # github.sha = full 40-char SHA, we take first 7 chars
+        # Output: sha-abc1234 (matches docker/metadata-action format)
+
+      # STEP 4: Update values.yaml with new image tag
+      - name: "✏️ Update Helm values.yaml"
+        run: |
+          NEW_TAG="${{ steps.image-tag.outputs.tag }}"
+          VALUES_FILE="helm/devops-platform/values.yaml"
+
+          echo "Current image tag in values.yaml:"
+          grep "tag:" $VALUES_FILE
+
+          # Use sed to replace the tag line precisely
+          sed -i "s/^  tag: .*/  tag: \"${NEW_TAG}\"/" $VALUES_FILE
+
+          echo ""
+          echo "Updated image tag in values.yaml:"
+          grep "tag:" $VALUES_FILE
+        # sed -i → in-place edit (modifies the file directly)
+        # Pattern: matches lines starting with "  tag: " (2 spaces — YAML indentation)
+        # Replaces entire line with new tag value
+        # Precise match prevents accidentally replacing other "tag:" keys
+
+      # STEP 5: Verify the change looks correct before committing
+      - name: "🔍 Verify values.yaml change"
+        run: |
+          echo "=== Git diff of values.yaml ==="
+          git diff helm/devops-platform/values.yaml
+        # Shows exactly what changed — useful for debugging
+        # If diff is empty, the sed pattern didn't match — check YAML indentation
+
+      # STEP 6: Commit and push the updated values.yaml
+      - name: "📤 Commit and push Helm values update"
+        run: |
+          NEW_TAG="${{ steps.image-tag.outputs.tag }}"
+
+          git add helm/devops-platform/values.yaml
+
+          # Check if there are actual changes to commit
+          if git diff --staged --quiet; then
+            echo "No changes to commit — image tag already up to date"
+            exit 0
+          fi
+
+          git commit -m "chore(gitops): update image tag to ${NEW_TAG}
+
+          Automated update by GitHub Actions CI pipeline
+          Workflow: ${{ github.workflow }}
+          Run: ${{ github.run_number }}
+          Triggered by: ${{ github.actor }}
+          Commit: ${{ github.sha }}"
+
+          git push origin main
+        # git diff --staged --quiet → checks if staging area has changes
+        # If no changes (same tag): skip commit (exit 0 = success, not failure)
+        # Commit message follows Conventional Commits format (chore: for automation)
+        # Multi-line message includes full context for audit trail
+
+      # STEP 7: Post deployment summary
+      - name: "📋 Deployment summary"
+        run: |
+          NEW_TAG="${{ steps.image-tag.outputs.tag }}"
+          echo "## 🚀 GitOps Deployment Triggered" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Field | Value |" >> $GITHUB_STEP_SUMMARY
+          echo "|---|---|" >> $GITHUB_STEP_SUMMARY
+          echo "| Image Tag | \`${NEW_TAG}\` |" >> $GITHUB_STEP_SUMMARY
+          echo "| Full Image | \`${{ env.IMAGE_NAME }}:${NEW_TAG}\` |" >> $GITHUB_STEP_SUMMARY
+          echo "| ArgoCD | Auto-sync triggered via values.yaml update |" >> $GITHUB_STEP_SUMMARY
+          echo "| Deployed by | \`${{ github.actor }}\` |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "ArgoCD will detect the Helm values change and deploy automatically." >> $GITHUB_STEP_SUMMARY          
