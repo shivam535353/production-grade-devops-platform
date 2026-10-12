@@ -20,7 +20,7 @@ namespace: default
 # -----------------------------------------------------------------------------
 image:
   repository: production-grade-devops-platform
-  tag: "sha-ba6b2dc"
+  tag: "sha-f55ec59"
   pullPolicy: IfNotPresent
 
 # -----------------------------------------------------------------------------
