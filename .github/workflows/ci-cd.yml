@@ -112,14 +112,14 @@ jobs:
           sudo apt-get install trivy -y
 
       - name: "🛡️ Run Trivy filesystem scan"
-        run: |
-          trivy fs . \
-            --severity CRITICAL \
-            --ignore-unfixed \
-            --exit-code 1 \
-            --no-progress \
-            --format table
-          echo "Trivy scan complete — no CRITICAL vulnerabilities found!"
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          scan-type: fs
+          scan-ref: .
+          severity: CRITICAL
+          ignore-unfixed: true
+          exit-code: "1"
+          format: table
 
   # ---------------------------------------------------------------------------
   # JOB 3: build-push — SECTION 6 + 7
