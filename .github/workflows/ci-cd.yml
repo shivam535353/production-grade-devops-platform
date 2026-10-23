@@ -394,7 +394,7 @@ jobs:
             exit 0
           fi
 
-          git commit -m "chore(gitops): update image tag to ${NEW_TAG}
+          git commit -m "chore(gitops): update image tag to ${NEW_TAG} [skip ci]
 
           Automated update by GitHub Actions CI pipeline
           Workflow: ${{ github.workflow }}
