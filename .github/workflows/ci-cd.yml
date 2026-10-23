@@ -15,6 +15,9 @@ permissions:
   contents: write
   packages: write
   id-token: write
+concurrency:
+  group: ci-cd-${{ github.ref }}
+  cancel-in-progress: false  
 
 # Global environment variables
 env:
@@ -387,7 +390,7 @@ jobs:
 
           # Check if there are actual changes to commit
           if git diff --staged --quiet; then
-            echo "No changes to commit — image tag already up to date"
+            echo "No changes to commit - image tag already up to date"
             exit 0
           fi
 
@@ -399,7 +402,20 @@ jobs:
           Triggered by: ${{ github.actor }}
           Commit: ${{ github.sha }}"
 
-          git push origin main
+          # Retry up to 3 times: rebase on latest remote main, then push.
+          # Handles the case where main moved while the pipeline was running.
+          for attempt in 1 2 3; do
+            echo "Push attempt ${attempt}..."
+            git pull --rebase origin main
+            if git push origin main; then
+              echo "Push succeeded"
+              exit 0
+            fi
+            sleep $((attempt * 5))
+          done
+
+          echo "Push failed after 3 attempts"
+          exit 1
         # git diff --staged --quiet → checks if staging area has changes
         # If no changes (same tag): skip commit (exit 0 = success, not failure)
         # Commit message follows Conventional Commits format (chore: for automation)
