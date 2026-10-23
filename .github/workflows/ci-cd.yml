@@ -357,7 +357,7 @@ jobs:
       - name: "✏️ Update Helm values.yaml"
         run: |
           NEW_TAG="${{ steps.image-tag.outputs.tag }}"
-          VALUES_FILE="helm/devops-platform/values.yaml"
+          VALUES_FILE="helm/devops-platform/values-dev.yaml"
 
           echo "Current image tag in values.yaml:"
           grep "tag:" $VALUES_FILE

@@ -5,8 +5,9 @@
 namespace: dev
 
 image:
-  tag:  "v3" 
-  pullPolicy: Never        # Minikube local image — never pull from registry
+  repository: ghcr.io/shivam535353/production-grade-devops-platform
+  tag: "sha-45d5f9b"
+  pullPolicy: IfNotPresent  # Minikube local image — never pull from registry
 
 replicaCount: 2
 
