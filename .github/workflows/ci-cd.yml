@@ -377,7 +377,7 @@ jobs:
       - name: "🔍 Verify values.yaml change"
         run: |
           echo "=== Git diff of values.yaml ==="
-          git diff helm/devops-platform/values.yaml
+          git diff helm/devops-platform/values-dev.yaml
         # Shows exactly what changed — useful for debugging
         # If diff is empty, the sed pattern didn't match — check YAML indentation
 
