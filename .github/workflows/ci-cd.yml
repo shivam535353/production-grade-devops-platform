@@ -17,7 +17,7 @@ permissions:
   id-token: write
 concurrency:
   group: ci-cd-${{ github.ref }}
-  cancel-in-progress: false  
+  cancel-in-progress: false
 
 # Global environment variables
 env:
@@ -50,7 +50,6 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
           pip install flake8 black
-
       - name: "🔍 Lint with flake8"
         run: |
           flake8 . \
@@ -58,11 +57,9 @@ jobs:
             --max-line-length=120 \
             --exclude=.git,__pycache__,.venv,venv \
             --statistics
-
       - name: "🎨 Format check with black"
         run: |
           black --check --diff --line-length 120 .
-
       - name: "✅ Verify Flask endpoints"
         env:
           APP_ENV: testing
@@ -78,7 +75,6 @@ jobs:
                   print(f'PASS {ep}')
           print('All endpoints healthy.')
           "
-
   # ---------------------------------------------------------------------------
   # JOB 2: security — Trivy vulnerability scan
   # ---------------------------------------------------------------------------
@@ -103,7 +99,6 @@ jobs:
             | sudo tee /etc/apt/sources.list.d/trivy.list
           sudo apt-get update -qq
           sudo apt-get install trivy -y
-
       - name: "🛡️ Run Trivy filesystem scan"
         run: |
           trivy fs . \
@@ -113,7 +108,6 @@ jobs:
             --no-progress \
             --format table
           echo "Trivy scan complete — no CRITICAL vulnerabilities found!"
-
   # ---------------------------------------------------------------------------
   # JOB 3: build-push — SECTION 6 + 7
   # Docker build with production tags + GHCR push
@@ -169,13 +163,10 @@ jobs:
           tags: |
             # Tag 1: latest — only on default branch (main)
             type=raw,value=latest,enable={{is_default_branch}}
-
             # Tag 2: short SHA — immutable, production deployment standard
             type=sha,prefix=sha-,format=short
-
             # Tag 3: branch + date + time — chronological build tracking
             type=raw,value={{branch}}-{{date 'YYYYMMDD-HHmmss'}}
-
             # Tag 4: PR reference — auto-tagged on pull request builds
             type=ref,event=pr,prefix=pr-
           labels: |
@@ -183,7 +174,6 @@ jobs:
             org.opencontainers.image.description=Multi-Environment CI/CD Platform
             org.opencontainers.image.vendor=Shivam Gadilkar
             org.opencontainers.image.url=https://github.com/shivam535353/production-grade-devops-platform
-
       # STEP 5: Build the Docker image and push to GHCR
       #
       # push: false on pull_request — image is built (to catch Dockerfile errors)
@@ -215,7 +205,6 @@ jobs:
           build-args: |
             GIT_COMMIT=${{ github.sha }}
             BUILD_DATE=${{ github.event.repository.updated_at }}
-
       # STEP 6: Write a formatted build summary to the GitHub Actions Summary page
       # $GITHUB_STEP_SUMMARY is a special file provided by GitHub Actions
       # Anything written to it renders as Markdown in the Actions tab → Summary section
@@ -230,7 +219,6 @@ jobs:
           echo "| Digest | \`${{ steps.build.outputs.digest }}\` |" >> $GITHUB_STEP_SUMMARY
           echo "| Git SHA | \`${{ github.sha }}\` |" >> $GITHUB_STEP_SUMMARY
           echo "| Triggered by | \`${{ github.actor }}\` |" >> $GITHUB_STEP_SUMMARY
-
   # ---------------------------------------------------------------------------
   # JOB 4: verify-image — SECTION 8
   # Pull image from GHCR and run smoke test + metadata verification
@@ -259,7 +247,6 @@ jobs:
           IMAGE="${{ env.IMAGE_NAME }}:latest"
           echo "Pulling: $IMAGE"
           docker pull $IMAGE
-
           echo ""
           echo "=== Image Details ==="
           docker inspect $IMAGE --format='
@@ -269,7 +256,6 @@ jobs:
           OS:           {{.Os}}
           Size:         {{.Size}} bytes
           '
-
       # STEP 2: Smoke test — run the container and hit the /health endpoint
       # This is a production pattern called "smoke testing" or "canary check"
       # Confirms the image actually starts, the app boots, and responds correctly
@@ -282,13 +268,10 @@ jobs:
             -e APP_ENV=testing \
             -e SECRET_KEY=ci-verify-secret \
             ${{ env.IMAGE_NAME }}:latest
-
           echo "Waiting for container to start..."
           sleep 10
-
           HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:5000/health)
           echo "Health endpoint status: $HTTP_STATUS"
-
           if [ "$HTTP_STATUS" -eq 200 ]; then
             echo "✅ Container health check PASSED"
           else
@@ -296,10 +279,8 @@ jobs:
             docker logs test-container
             exit 1
           fi
-
           docker stop test-container
           docker rm test-container
-
       # STEP 3: Verify OCI labels are correctly embedded in the image
       # Confirms that title, description, vendor, and source URL
       # were properly injected during the build step
@@ -358,13 +339,10 @@ jobs:
         run: |
           NEW_TAG="${{ steps.image-tag.outputs.tag }}"
           VALUES_FILE="helm/devops-platform/values-dev.yaml"
-
           echo "Current image tag in values.yaml:"
           grep "tag:" $VALUES_FILE
-
           # Use sed to replace the tag line precisely
           sed -i "s/^  tag: .*/  tag: \"${NEW_TAG}\"/" $VALUES_FILE
-
           echo ""
           echo "Updated image tag in values.yaml:"
           grep "tag:" $VALUES_FILE
@@ -385,23 +363,18 @@ jobs:
       - name: "📤 Commit and push Helm values update"
         run: |
           NEW_TAG="${{ steps.image-tag.outputs.tag }}"
-
           git add helm/devops-platform/values-dev.yaml
-
           # Check if there are actual changes to commit
           if git diff --staged --quiet; then
             echo "No changes to commit - image tag already up to date"
             exit 0
           fi
-
           git commit -m "chore(gitops): update image tag to ${NEW_TAG} [skip ci]
-
           Automated update by GitHub Actions CI pipeline
           Workflow: ${{ github.workflow }}
           Run: ${{ github.run_number }}
           Triggered by: ${{ github.actor }}
           Commit: ${{ github.sha }}"
-
           # Retry up to 3 times: rebase on latest remote main, then push.
           # Handles the case where main moved while the pipeline was running.
           for attempt in 1 2 3; do
@@ -413,7 +386,6 @@ jobs:
             fi
             sleep $((attempt * 5))
           done
-
           echo "Push failed after 3 attempts"
           exit 1
         # git diff --staged --quiet → checks if staging area has changes
@@ -434,4 +406,4 @@ jobs:
           echo "| ArgoCD | Auto-sync triggered via values.yaml update |" >> $GITHUB_STEP_SUMMARY
           echo "| Deployed by | \`${{ github.actor }}\` |" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "ArgoCD will detect the Helm values change and deploy automatically." >> $GITHUB_STEP_SUMMARY          
+          echo "ArgoCD will detect the Helm values change and deploy automatically." >> $GITHUB_STEP_SUMMARY
