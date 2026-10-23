@@ -95,21 +95,8 @@ jobs:
     needs: test
 
     steps:
-
       - name: "📥 Checkout repository"
         uses: actions/checkout@v4
-
-      - name: "🛠️ Install Trivy"
-        run: |
-          sudo apt-get install wget apt-transport-https gnupg -y
-          wget -qO - https://aquasecurity.github.io/trivy-repo/deb/public.key \
-            | gpg --dearmor \
-            | sudo tee /usr/share/keyrings/trivy.gpg > /dev/null
-          echo "deb [signed-by=/usr/share/keyrings/trivy.gpg] \
-            https://aquasecurity.github.io/trivy-repo/deb generic main" \
-            | sudo tee /etc/apt/sources.list.d/trivy.list
-          sudo apt-get update -qq
-          sudo apt-get install trivy -y
 
       - name: "🛡️ Run Trivy filesystem scan"
         uses: aquasecurity/trivy-action@v0.28.0
