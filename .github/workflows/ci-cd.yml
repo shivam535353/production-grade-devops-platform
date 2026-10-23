@@ -174,22 +174,22 @@ jobs:
         with:
           images: ${{ env.IMAGE_NAME }}
           tags: |
-            # Tag 1: latest — only on default branch (main)
+            # Tag 1: latest — default branch only
             type=raw,value=latest,enable={{is_default_branch}}
 
-            # Tag 2: short SHA — immutable, production deployment standard
+            # Tag 2: immutable short SHA
             type=sha,prefix=sha-,format=short
 
-            # Tag 3: branch + date + time — chronological build tracking
-            type=raw,value={{branch}}-{{date 'YYYYMMDD-HHmmss'}}
+            # Tag 3: branch name for branch builds
+            type=ref,event=branch
 
-            # Tag 4: PR reference — auto-tagged on pull request builds
+            # Tag 4: PR reference
             type=ref,event=pr,prefix=pr-
 
-            # Tag 5: Semantic version (e.g. 1.2.3)
+            # Tag 5: semantic version (e.g. 1.2.3)
             type=semver,pattern={{version}}
 
-            # Tag 6: Major.Minor version (e.g. 1.2)
+            # Tag 6: major.minor version (e.g. 1.2)
             type=semver,pattern={{major}}.{{minor}}
           labels: |
             org.opencontainers.image.title=production-grade-devops-platform
