@@ -386,7 +386,7 @@ jobs:
         run: |
           NEW_TAG="${{ steps.image-tag.outputs.tag }}"
 
-          git add helm/devops-platform/values.yaml
+          git add helm/devops-platform/values-dev.yaml
 
           # Check if there are actual changes to commit
           if git diff --staged --quiet; then
