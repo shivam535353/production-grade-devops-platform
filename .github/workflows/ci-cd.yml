@@ -1,4 +1,4 @@
-﻿# =============================================================================
+# =============================================================================
 # production-grade-devops-platform — GitHub Actions CI/CD Pipeline
 # =============================================================================
 
@@ -138,7 +138,7 @@ jobs:
       # - GitHub Actions cache backend support
       # - Parallel layer building for faster builds
       - name: "🔧 Set up Docker Buildx"
-        uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f
+        uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069
 
       # STEP 3: Authenticate to GitHub Container Registry (GHCR)
       # github.actor  = username of whoever triggered the workflow
