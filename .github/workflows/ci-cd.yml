@@ -169,7 +169,7 @@ jobs:
             # Tag 2: short SHA — immutable, production deployment standard
             type=sha,prefix=sha-,format=short
             # Tag 3: branch + date + time — chronological build tracking
-            type=raw,value={{branch}}-{{date 'YYYYMMDD-HHmmss'}}
+            type=ref,event=branch,suffix=-{{date 'YYYYMMDD-HHmmss'}}
             # Tag 4: PR reference — auto-tagged on pull request builds
             type=ref,event=pr,prefix=pr-
           labels: |
