@@ -6,7 +6,7 @@ namespace: production
 
 image:
   repository: production-grade-devops-platform
-  tag: "v1"
+  tag: "sha-9bb4605"
   pullPolicy: Never
 
 replicaCount: 3
