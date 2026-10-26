@@ -1,4 +1,4 @@
-﻿# =============================================================================
+# =============================================================================
 # production-grade-devops-platform — GitHub Actions CI/CD Pipeline
 # =============================================================================
 
@@ -145,7 +145,7 @@ jobs:
       # GITHUB_TOKEN  = automatically injected by GitHub Actions, no manual setup needed
       # Token scope   = write access only to this repo's packages (least privilege)
       - name: "🔑 Log in to GitHub Container Registry"
-        uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9
+        uses: docker/login-action@81c6f93d4bc991e510b342a00b419b3bb4efc5c6
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
@@ -240,7 +240,7 @@ jobs:
 
       # Authenticate to GHCR before pulling the image
       - name: "🔑 Log in to GHCR"
-        uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9
+        uses: docker/login-action@81c6f93d4bc991e510b342a00b419b3bb4efc5c6
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
