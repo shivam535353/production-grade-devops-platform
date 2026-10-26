@@ -1,0 +1,5 @@
+# Require review for GitHub Actions workflow changes
+.github/workflows/ @shivam535353
+
+# Require review for Dependabot configuration changes
+.github/dependabot.yml @shivam535353
