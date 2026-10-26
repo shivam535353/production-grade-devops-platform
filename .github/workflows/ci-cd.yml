@@ -1,4 +1,4 @@
-# =============================================================================
+﻿# =============================================================================
 # production-grade-devops-platform — GitHub Actions CI/CD Pipeline
 # =============================================================================
 
@@ -274,19 +274,47 @@ jobs:
             -e APP_ENV=testing \
             -e SECRET_KEY=ci-verify-secret \
             ${{ env.IMAGE_NAME }}:latest
-          echo "Waiting for container to start..."
-          sleep 10
-          HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:5000/health)
-          echo "Health endpoint status: $HTTP_STATUS"
-          if [ "$HTTP_STATUS" -eq 200 ]; then
-            echo "✅ Container health check PASSED"
-          else
-            echo "❌ Container health check FAILED (status: $HTTP_STATUS)"
-            docker logs test-container
-            exit 1
+          echo "Waiting for container health..."
+
+          for i in $(seq 1 10); do
+            HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
+              http://localhost:5000/health || true)
+
+            echo "Attempt $i/10 - HTTP $HTTP_STATUS"
+
+            if [ "$HTTP_STATUS" = "200" ]; then
+            echo "Container health check PASSED"
+            exit 0
           fi
-          docker stop test-container
-          docker rm test-container
+
+            sleep 3
+          done
+
+          echo "Container health check FAILED"
+          docker logs test-container || true
+          docker stop test-container || true
+          docker rm test-container || true
+          exit 1
+
+      - name: "📋 Collect container logs on failure"
+        if: failure()
+        continue-on-error: true
+        run: |
+          mkdir -p failure-logs
+          docker logs test-container > failure-logs/container.log 2>&1 || true
+          docker ps -a > failure-logs/docker-containers.txt
+          docker inspect test-container > failure-logs/container-inspect.json 2>&1 || true
+          docker stop test-container || true
+          docker rm test-container || true
+
+      - name: "📦 Upload failure diagnostics"
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: verify-image-failure-logs
+          path: failure-logs/
+          if-no-files-found: warn
+          retention-days: 7
       # STEP 3: Verify OCI labels are correctly embedded in the image
       # Confirms that title, description, vendor, and source URL
       # were properly injected during the build step
