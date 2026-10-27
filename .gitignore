@@ -4,3 +4,12 @@ argocd-windows-amd64.exe
 *raw-secret*
 *-actual.yaml
 values-prod-secrets.yaml
+# Python cache and virtual environments
+__pycache__/
+*.py[cod]
+.venv/
+
+# Python cache and virtual environments
+__pycache__/
+*.py[cod]
+.venv/

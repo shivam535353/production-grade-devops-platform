@@ -1,19 +1,41 @@
-"""Runtime metrics endpoint."""
+
+"""Runtime metrics endpoints: JSON diagnostics and Prometheus metrics."""
 
 import time
 from datetime import datetime, timezone
-from flask import Blueprint, current_app, jsonify
+
+from flask import Blueprint, Response, current_app, jsonify
+from prometheus_client import CONTENT_TYPE_LATEST, Counter, Gauge, generate_latest
+
 from src.services.system_service import SystemService
 
 metrics_bp = Blueprint("metrics", __name__)
+
 _START = time.monotonic()
 _REQ_COUNT = 0
+
+APP_UPTIME = Gauge(
+    "clouddeploy_app_uptime_seconds",
+    "Application uptime in seconds",
+)
+APP_REQUESTS = Counter(
+    "clouddeploy_app_metrics_requests_total",
+    "Requests made to the JSON metrics endpoint",
+)
+APP_INFO = Gauge(
+    "clouddeploy_app_info",
+    "Static application information",
+    ["application", "version", "environment"],
+)
 
 
 @metrics_bp.route("/metrics", methods=["GET"])
 def metrics():
+    """Existing JSON diagnostics endpoint."""
     global _REQ_COUNT
     _REQ_COUNT += 1
+    APP_REQUESTS.inc()
+
     return (
         jsonify(
             {
@@ -30,7 +52,10 @@ def metrics():
                 },
                 "kubernetes": {
                     "ready": True,
-                    "probes": {"liveness": "/health", "readiness": "/health"},
+                    "probes": {
+                        "liveness": "/health",
+                        "readiness": "/health",
+                    },
                 },
                 "project_stats": {
                     "files": 42,
@@ -46,3 +71,16 @@ def metrics():
         ),
         200,
     )
+
+
+@metrics_bp.route("/metrics/prometheus", methods=["GET"])
+def prometheus_metrics():
+    """Prometheus-compatible metrics endpoint."""
+    APP_UPTIME.set(time.monotonic() - _START)
+    APP_INFO.labels(
+        application=current_app.config["APP_NAME"],
+        version=current_app.config["APP_VERSION"],
+        environment=current_app.config["ENV"],
+    ).set(1)
+
+    return Response(generate_latest(), mimetype=CONTENT_TYPE_LATEST)
