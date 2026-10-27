@@ -1,4 +1,3 @@
-
 """Runtime metrics endpoints: JSON diagnostics and Prometheus metrics."""
 
 import time
