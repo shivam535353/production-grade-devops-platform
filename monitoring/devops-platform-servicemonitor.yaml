@@ -1,20 +1,21 @@
-
+{{- if .Values.serviceMonitor.enabled }}
 apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
-  name: devops-platform
-  namespace: dev
+  name: {{ include "devops-platform.fullname" . }}
+  namespace: {{ .Values.namespace | default "default" }}
   labels:
-    release: monitoring
+    {{- include "devops-platform.labels" . | nindent 4 }}
 spec:
-  namespaceSelector:
-    matchNames:
-      - dev
   selector:
     matchLabels:
-      app.kubernetes.io/instance: devops-platform
-      app.kubernetes.io/name: devops-platform
+      {{- include "devops-platform.selectorLabels" . | nindent 6 }}
+  namespaceSelector:
+    matchNames:
+      - {{ .Values.namespace | default "default" }}
   endpoints:
     - port: http
-      path: /metrics/prometheus
-      interval: 30s
+      path: {{ .Values.serviceMonitor.path }}
+      interval: {{ .Values.serviceMonitor.interval }}
+      scrapeTimeout: {{ .Values.serviceMonitor.scrapeTimeout }}
+{{- end }}

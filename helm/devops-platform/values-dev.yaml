@@ -37,3 +37,6 @@ configMap:
 secret:
   enabled: false  
   secretKey: "local-dev-secret-12345"
+
+serviceMonitor:
+  enabled: true  

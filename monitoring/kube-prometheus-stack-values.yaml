@@ -42,3 +42,12 @@ kubeEtcd:
   enabled: false
 kubeProxy:
   enabled: false
+
+# -----------------------------------------------------------------------------
+# Prometheus ServiceMonitor (requires Prometheus Operator CRDs in the cluster)
+# -----------------------------------------------------------------------------
+serviceMonitor:
+  enabled: false
+  path: /prometheus-metrics
+  interval: 30s
+  scrapeTimeout: 10s 
