@@ -1,0 +1,20 @@
+
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: devops-platform
+  namespace: dev
+  labels:
+    release: monitoring
+spec:
+  namespaceSelector:
+    matchNames:
+      - dev
+  selector:
+    matchLabels:
+      app.kubernetes.io/instance: devops-platform
+      app.kubernetes.io/name: devops-platform
+  endpoints:
+    - port: http
+      path: /metrics/prometheus
+      interval: 30s
