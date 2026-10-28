@@ -3,7 +3,7 @@
 import time
 from datetime import datetime, timezone
 
-from prometheus_client import generate_latest, CONTENT_TYPE_LATEST
+from prometheus_client import generate_latest
 
 from flask import Blueprint, Response, current_app, jsonify
 
@@ -17,7 +17,10 @@ _PROMETHEUS_CONTENT_TYPE = "text/plain; version=0.0.4; charset=utf-8"
 
 def _escape_label(value):
     """Escape a label value for Prometheus text exposition."""
-    return str(value).replace("\\", "\\\\").replace("\n", "\\n").replace('"', '\\"')
+    value = str(value)
+    value = value.replace("\\", "\\\\")
+    value = value.replace("\n", "\\n")
+    return value.replace('"', '\\"')
 
 
 @metrics_bp.route("/metrics", methods=["GET"])
@@ -76,7 +79,8 @@ def prometheus_metrics():
         "# HELP clouddeploy_app_uptime_seconds Application uptime in seconds\n"
         "# TYPE clouddeploy_app_uptime_seconds gauge\n"
         f"clouddeploy_app_uptime_seconds {time.monotonic() - _START}\n"
-        "# HELP clouddeploy_app_metrics_requests_total Requests made to the JSON metrics endpoint\n"
+        "# HELP clouddeploy_app_metrics_requests_total "
+        "Requests made to the JSON metrics endpoint\n"
         "# TYPE clouddeploy_app_metrics_requests_total counter\n"
         f"clouddeploy_app_metrics_requests_total {_REQ_COUNT}\n"
         "# HELP clouddeploy_app_info Static application information\n"

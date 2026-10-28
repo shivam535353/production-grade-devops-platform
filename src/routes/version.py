@@ -31,4 +31,3 @@ def version_info():
         ),
         200,
     )
-
