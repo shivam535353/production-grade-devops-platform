@@ -57,6 +57,10 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install -r requirements.txt
           python -m pip install pytest flake8 black
+      - name: "🔎 Verify Prometheus dependency"
+        run: |
+          python -m pip show prometheus-client
+          python -c "from prometheus_client import Counter, Histogram; print('Prometheus client import successful')"    
       - name: "🔍 Lint with flake8"
         run: |
           flake8 . \
@@ -76,7 +80,7 @@ jobs:
           from app import create_app
           app = create_app('testing')
           with app.test_client() as c:
-              for ep in ['/', '/health', '/info', '/version', '/metrics', '/tech-stack', '/developer']:
+              for ep in ['/', '/health', '/info', '/version', '/metrics','/metrics/prometheus', '/tech-stack', '/developer']:
                   r = c.get(ep)
                   assert r.status_code == 200, f'FAILED {ep}: {r.status_code}'
                   print(f'PASS {ep}')
