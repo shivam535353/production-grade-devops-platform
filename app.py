@@ -1,4 +1,3 @@
-
 """
 production-grade-devops-platform — Flask Application Factory
 GitHub : https://github.com/shivam535353/production-grade-devops-platform
@@ -21,7 +20,6 @@ from src.routes.metrics import metrics_bp
 from src.routes.tech_stack import tech_stack_bp
 from src.routes.developer import developer_bp
 from src.routes.gitops_demo import gitops_demo_bp
-
 
 HTTP_REQUESTS = Counter(
     "http_requests_total",
@@ -100,9 +98,7 @@ def _register_security_headers(app):
         response.headers["X-Content-Type-Options"] = "nosniff"
         response.headers["X-Frame-Options"] = "DENY"
         response.headers["X-XSS-Protection"] = "1; mode=block"
-        response.headers["Referrer-Policy"] = (
-            "strict-origin-when-cross-origin"
-        )
+        response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
         response.headers["Server"] = "DevOpsPlatform/1.0"
         return response
 
