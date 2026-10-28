@@ -21,7 +21,7 @@ spec:
         elements:
           - environment: dev
             namespace: dev
-            imageTag: "v2"
+            imageTag: sha-87020d9
             replicaCount: "2"
             logLevel: debug
             syncPolicy: automated
