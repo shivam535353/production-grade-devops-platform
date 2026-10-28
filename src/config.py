@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 import os
-from datetime import datetime
+from datetime import datetime, timezone
 
 
 class BaseConfig:
@@ -18,7 +18,7 @@ class BaseConfig:
     SECRET_KEY: str = os.environ.get("SECRET_KEY", os.urandom(32).hex())
     JSON_SORT_KEYS: bool = False
     JSONIFY_PRETTYPRINT_REGULAR: bool = True
-    BUILD_DATE: str = datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ")
+    BUILD_DATE: str = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
     GIT_COMMIT: str = os.environ.get("GIT_COMMIT", "local-dev")
     CLOUD_PLATFORM: str = os.environ.get("CLOUD_PLATFORM", "AWS EKS")
     TESTING: bool = False

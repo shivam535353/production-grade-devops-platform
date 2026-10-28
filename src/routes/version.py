@@ -1,19 +1,21 @@
+
 """Version endpoint."""
 
 import platform
+from importlib.metadata import PackageNotFoundError, version
+
 from flask import Blueprint, current_app, jsonify
 
 version_bp = Blueprint("version", __name__)
 
 
 @version_bp.route("/version", methods=["GET"])
-def version():
+def version_info():
     try:
-        import flask
+        flask_version = version("flask")
+    except PackageNotFoundError:
+        flask_version = "unknown"
 
-        fv = flask.__version__
-    except Exception:
-        fv = "unknown"
     return (
         jsonify(
             {
@@ -22,10 +24,11 @@ def version():
                 "git_commit": current_app.config["GIT_COMMIT"],
                 "build_date": current_app.config["BUILD_DATE"],
                 "python_version": platform.python_version(),
-                "flask_version": fv,
+                "flask_version": flask_version,
                 "environment": current_app.config["ENV"],
                 "repository": current_app.config["REPO_URL"],
             }
         ),
         200,
     )
+

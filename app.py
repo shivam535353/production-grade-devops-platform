@@ -6,7 +6,9 @@ Author : Shivam Gadilkar
 
 import logging
 import sys
-from flask import Flask, jsonify
+import time
+from prometheus_client import Counter, Histogram
+from flask import Flask, jsonify, request, g
 from src.config import get_config
 from src.routes.home import home_bp
 from src.routes.health import health_bp
@@ -17,6 +19,17 @@ from src.routes.tech_stack import tech_stack_bp
 from src.routes.developer import developer_bp
 from src.routes.gitops_demo import gitops_demo_bp
 
+HTTP_REQUESTS = Counter(
+    "http_requests_total",
+    "Total HTTP requests",
+    ["method", "endpoint", "status"],
+)
+
+HTTP_REQUEST_DURATION = Histogram(
+    "http_request_duration_seconds",
+    "HTTP request duration in seconds",
+    ["method", "endpoint"],
+)
 
 def _configure_logging(app):
     handler = logging.StreamHandler(sys.stdout)
@@ -61,6 +74,31 @@ def _register_security_headers(app):
         response.headers["X-XSS-Protection"] = "1; mode=block"
         response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
         response.headers["Server"] = "DevOpsPlatform/1.0"
+        return response
+
+    @app.before_request
+    def start_request_timer():
+        g.request_start_time = time.perf_counter()
+
+    @app.after_request
+    def record_http_metrics(response):
+        if request.path not in ("/metrics", "/metrics/prometheus"):
+            endpoint = request.endpoint or "unknown"
+            duration = time.perf_counter() - getattr(
+                g, "request_start_time", time.perf_counter()
+            )
+
+            HTTP_REQUESTS.labels(
+                method=request.method,
+                endpoint=endpoint,
+                status=str(response.status_code),
+            ).inc()
+
+            HTTP_REQUEST_DURATION.labels(
+                method=request.method,
+                endpoint=endpoint,
+            ).observe(duration)
+
         return response
 
 

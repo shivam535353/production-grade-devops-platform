@@ -3,6 +3,8 @@
 import time
 from datetime import datetime, timezone
 
+from prometheus_client import generate_latest, CONTENT_TYPE_LATEST
+
 from flask import Blueprint, Response, current_app, jsonify
 
 from src.services.system_service import SystemService
@@ -81,5 +83,7 @@ def prometheus_metrics():
         "# TYPE clouddeploy_app_info gauge\n"
         f"clouddeploy_app_info{{{labels}}} 1\n"
     )
-
-    return Response(body, mimetype=_PROMETHEUS_CONTENT_TYPE)
+    return Response(
+        body + generate_latest().decode("utf-8"),
+        mimetype=_PROMETHEUS_CONTENT_TYPE,
+    )
