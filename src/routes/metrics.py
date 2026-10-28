@@ -1,4 +1,3 @@
-
 """Runtime metrics endpoints."""
 
 import time
