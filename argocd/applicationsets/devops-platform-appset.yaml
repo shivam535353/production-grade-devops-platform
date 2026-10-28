@@ -21,14 +21,16 @@ spec:
         elements:
           - environment: dev
             namespace: dev
-            imageTag: sha-87020d9
+            valuesFile: values-dev.yaml
+            imageTag: sha-b28d7e3
             replicaCount: "2"
             logLevel: debug
             syncPolicy: automated
 
           - environment: production
             namespace: production
-            imageTag: "latest"
+            valuesFile: values-prod.yaml
+            imageTag: sha-b28d7e3
             replicaCount: "3"
             logLevel: info
             syncPolicy: manual
@@ -62,7 +64,7 @@ spec:
           releaseName: devops-platform
           valueFiles:
             - values.yaml
-            - "values-{{environment}}.yaml"    # dynamic values file!
+            - "{{valuesFile}}"
           parameters:
             - name: image.tag
               value: "{{imageTag}}"            # dynamic image tag

@@ -85,7 +85,7 @@
         {
           "refId": "A",
           "legendFormat": "{{path}}",
-          "expr": "sum(rate(flask_http_request_total{namespace=\"$namespace\"}[1m])) by (path)"
+          "expr": "sum by (endpoint) (rate(flask_http_request_total{namespace=\"$namespace\"}[1m]))"
         }
       ]
     },

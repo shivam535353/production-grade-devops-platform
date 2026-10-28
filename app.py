@@ -6,6 +6,9 @@ Author : Shivam Gadilkar
 
 import logging
 import sys
+import time
+from flask import g, request
+from src.routes.metrics import HTTP_REQUESTS, HTTP_REQUEST_DURATION
 from flask import Flask, jsonify
 from src.config import get_config
 from src.routes.home import home_bp
@@ -42,7 +45,30 @@ def _register_error_handlers(app):
             ),
             404,
         )
+    @app.before_request
+    def start_request_timer():
+        g.request_start_time = time.perf_counter()
 
+    @app.after_request
+    def record_http_metrics(response):
+        start_time = getattr(g, "request_start_time", None)
+
+        if start_time is not None and request.path != "/metrics/prometheus":
+            duration = time.perf_counter() - start_time
+            endpoint = request.endpoint or "unknown"
+
+            HTTP_REQUESTS.labels(
+                method=request.method,
+                endpoint=endpoint,
+                status=str(response.status_code),
+            ).inc()
+
+            HTTP_REQUEST_DURATION.labels(
+                method=request.method,
+                endpoint=endpoint,
+            ).observe(duration)
+
+        return response
     @app.errorhandler(500)
     def internal_error(exc):
         app.logger.exception("500 — %s", exc)

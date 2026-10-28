@@ -3,8 +3,14 @@
 import time
 from datetime import datetime, timezone
 
-from flask import Blueprint, Response, current_app, jsonify
-from prometheus_client import CONTENT_TYPE_LATEST, Counter, Gauge, generate_latest
+from flask import Blueprint, Response, current_app, jsonify, request
+from prometheus_client import (
+    CONTENT_TYPE_LATEST,
+    Counter,
+    Gauge,
+    Histogram,
+    generate_latest,
+)
 
 from src.services.system_service import SystemService
 
@@ -25,6 +31,18 @@ APP_INFO = Gauge(
     "clouddeploy_app_info",
     "Static application information",
     ["application", "version", "environment"],
+)
+
+HTTP_REQUESTS = Counter(
+    "flask_http_request_total",
+    "Total HTTP requests",
+    ["method", "endpoint", "status"],
+)
+
+HTTP_REQUEST_DURATION = Histogram(
+    "flask_http_request_duration_seconds",
+    "HTTP request duration in seconds",
+    ["method", "endpoint"],
 )
 
 

@@ -19,7 +19,7 @@ namespace: default
 # Container Image
 # -----------------------------------------------------------------------------
 image:
-  repository: production-grade-devops-platform
+  repository: ghcr.io/shivam535353/production-grade-devops-platform
   tag: "sha-45d5f9b"
   pullPolicy: IfNotPresent
 
@@ -162,3 +162,6 @@ affinity: {}
 grafanaDashboard:
   enabled: false
   folder: "Applications"
+
+serviceMonitor:
+  enabled: false
