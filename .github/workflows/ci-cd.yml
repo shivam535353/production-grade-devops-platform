@@ -61,6 +61,7 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           python -m pip install --no-cache-dir -r requirements.txt
+          python -m pip install --no-cache-dir prometheus-client==0.23.1
           python -m pip install pytest flake8 black
           python -m pip show prometheus-client
           python -c "from prometheus_client import Counter, Histogram; print('Prometheus client import successful')"
