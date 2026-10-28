@@ -45,6 +45,7 @@ def _register_error_handlers(app):
             ),
             404,
         )
+
     @app.before_request
     def start_request_timer():
         g.request_start_time = time.perf_counter()
@@ -69,6 +70,7 @@ def _register_error_handlers(app):
             ).observe(duration)
 
         return response
+
     @app.errorhandler(500)
     def internal_error(exc):
         app.logger.exception("500 — %s", exc)

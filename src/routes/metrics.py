@@ -3,7 +3,7 @@
 import time
 from datetime import datetime, timezone
 
-from flask import Blueprint, Response, current_app, jsonify, request
+from flask import Blueprint, Response, current_app, jsonify
 from prometheus_client import (
     CONTENT_TYPE_LATEST,
     Counter,
