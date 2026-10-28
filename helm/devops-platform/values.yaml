@@ -155,3 +155,10 @@ secret:
 nodeSelector: {}
 tolerations: []
 affinity: {}
+
+# -----------------------------------------------------------------------------
+# Grafana dashboard (requires Grafana sidecar, installed by kube-prometheus-stack)
+# -----------------------------------------------------------------------------
+grafanaDashboard:
+  enabled: false
+  folder: "Applications"

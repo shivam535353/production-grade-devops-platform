@@ -56,3 +56,6 @@ quota:
   limitsCpu: "8"
   limitsMemory: "16Gi"
   maxPods: "30" 
+
+grafanaDashboard:
+  enabled: true  

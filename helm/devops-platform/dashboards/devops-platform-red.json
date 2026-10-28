@@ -1,0 +1,152 @@
+{
+  "uid": "devops-platform-red",
+  "title": "DevOps Platform - RED Metrics",
+  "tags": ["devops-platform", "red"],
+  "schemaVersion": 39,
+  "version": 1,
+  "refresh": "30s",
+  "time": { "from": "now-30m", "to": "now" },
+  "templating": {
+    "list": [
+      {
+        "name": "namespace",
+        "label": "Namespace",
+        "type": "query",
+        "datasource": { "type": "prometheus", "uid": "prometheus" },
+        "query": { "query": "label_values(flask_http_request_total, namespace)", "refId": "ns" },
+        "refresh": 2,
+        "sort": 1,
+        "current": {}
+      }
+    ]
+  },
+  "panels": [
+    {
+      "id": 1, "type": "stat", "title": "Request Rate",
+      "gridPos": { "x": 0, "y": 0, "w": 6, "h": 4 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": { "defaults": { "unit": "reqps" }, "overrides": [] },
+      "targets": [
+        { "refId": "A", "expr": "sum(rate(flask_http_request_total{namespace=\"$namespace\"}[1m]))" }
+      ]
+    },
+    {
+      "id": 2, "type": "stat", "title": "Error Rate (5xx)",
+      "gridPos": { "x": 6, "y": 0, "w": 6, "h": 4 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "orange", "value": 0.01 },
+              { "color": "red", "value": 0.05 }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": { "colorMode": "background" },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "(sum(rate(flask_http_request_total{namespace=\"$namespace\",status=~\"5..\"}[5m])) or vector(0)) / sum(rate(flask_http_request_total{namespace=\"$namespace\"}[5m]))"
+        }
+      ]
+    },
+    {
+      "id": 3, "type": "stat", "title": "p95 Latency",
+      "gridPos": { "x": 12, "y": 0, "w": 6, "h": 4 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": { "defaults": { "unit": "s" }, "overrides": [] },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "histogram_quantile(0.95, sum(rate(flask_http_request_duration_seconds_bucket{namespace=\"$namespace\"}[5m])) by (le))"
+        }
+      ]
+    },
+    {
+      "id": 4, "type": "stat", "title": "Pods Up",
+      "gridPos": { "x": 18, "y": 0, "w": 6, "h": 4 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [
+        { "refId": "A", "expr": "count(up{namespace=\"$namespace\", job=~\".*devops-platform.*\"} == 1)" }
+      ]
+    },
+    {
+      "id": 5, "type": "timeseries", "title": "Requests per Second by Path",
+      "gridPos": { "x": 0, "y": 4, "w": 12, "h": 8 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": { "defaults": { "unit": "reqps" }, "overrides": [] },
+      "targets": [
+        {
+          "refId": "A",
+          "legendFormat": "{{path}}",
+          "expr": "sum(rate(flask_http_request_total{namespace=\"$namespace\"}[1m])) by (path)"
+        }
+      ]
+    },
+    {
+      "id": 6, "type": "timeseries", "title": "Latency Percentiles",
+      "gridPos": { "x": 12, "y": 4, "w": 12, "h": 8 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": { "defaults": { "unit": "s" }, "overrides": [] },
+      "targets": [
+        {
+          "refId": "A", "legendFormat": "p50",
+          "expr": "histogram_quantile(0.50, sum(rate(flask_http_request_duration_seconds_bucket{namespace=\"$namespace\"}[5m])) by (le))"
+        },
+        {
+          "refId": "B", "legendFormat": "p95",
+          "expr": "histogram_quantile(0.95, sum(rate(flask_http_request_duration_seconds_bucket{namespace=\"$namespace\"}[5m])) by (le))"
+        },
+        {
+          "refId": "C", "legendFormat": "p99",
+          "expr": "histogram_quantile(0.99, sum(rate(flask_http_request_duration_seconds_bucket{namespace=\"$namespace\"}[5m])) by (le))"
+        }
+      ]
+    },
+    {
+      "id": 7, "type": "timeseries", "title": "Requests by Status Code",
+      "gridPos": { "x": 0, "y": 12, "w": 12, "h": 8 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": { "defaults": { "unit": "reqps" }, "overrides": [] },
+      "targets": [
+        {
+          "refId": "A",
+          "legendFormat": "{{status}}",
+          "expr": "sum(rate(flask_http_request_total{namespace=\"$namespace\"}[1m])) by (status)"
+        }
+      ]
+    },
+    {
+      "id": 8, "type": "timeseries", "title": "CPU Usage per Pod",
+      "gridPos": { "x": 12, "y": 12, "w": 6, "h": 8 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": { "defaults": { "unit": "none" }, "overrides": [] },
+      "targets": [
+        {
+          "refId": "A",
+          "legendFormat": "{{pod}}",
+          "expr": "sum(rate(container_cpu_usage_seconds_total{namespace=\"$namespace\", pod=~\"devops-platform-.*\", container!=\"\"}[2m])) by (pod)"
+        }
+      ]
+    },
+    {
+      "id": 9, "type": "timeseries", "title": "Memory Usage per Pod",
+      "gridPos": { "x": 18, "y": 12, "w": 6, "h": 8 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": { "defaults": { "unit": "bytes" }, "overrides": [] },
+      "targets": [
+        {
+          "refId": "A",
+          "legendFormat": "{{pod}}",
+          "expr": "sum(container_memory_working_set_bytes{namespace=\"$namespace\", pod=~\"devops-platform-.*\", container!=\"\"}) by (pod)"
+        }
+      ]
+    }
+  ]
+}

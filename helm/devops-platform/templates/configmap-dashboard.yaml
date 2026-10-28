@@ -1,0 +1,15 @@
+{{- if .Values.grafanaDashboard.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "devops-platform.fullname" . }}-dashboard
+  namespace: {{ .Values.namespace | default "default" }}
+  labels:
+    {{- include "devops-platform.labels" . | nindent 4 }}
+    grafana_dashboard: "1"
+  annotations:
+    grafana_folder: {{ .Values.grafanaDashboard.folder | quote }}
+data:
+  devops-platform-red.json: |-
+    {{- .Files.Get "dashboards/devops-platform-red.json" | nindent 4 }}
+{{- end }}
