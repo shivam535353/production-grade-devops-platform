@@ -1,19 +1,30 @@
-"""Runtime metrics endpoint."""
+
+"""Runtime metrics endpoints."""
 
 import time
 from datetime import datetime, timezone
-from flask import Blueprint, current_app, jsonify
+
+from flask import Blueprint, Response, current_app, jsonify
+
 from src.services.system_service import SystemService
 
 metrics_bp = Blueprint("metrics", __name__)
 _START = time.monotonic()
 _REQ_COUNT = 0
+_PROMETHEUS_CONTENT_TYPE = "text/plain; version=0.0.4; charset=utf-8"
+
+
+def _escape_label(value):
+    """Escape a label value for Prometheus text exposition."""
+    return str(value).replace("\\", "\\\\").replace("\n", "\\n").replace('"', '\\"')
 
 
 @metrics_bp.route("/metrics", methods=["GET"])
 def metrics():
+    """Return runtime metrics as JSON."""
     global _REQ_COUNT
     _REQ_COUNT += 1
+
     return (
         jsonify(
             {
@@ -46,3 +57,30 @@ def metrics():
         ),
         200,
     )
+
+
+@metrics_bp.route("/metrics/prometheus", methods=["GET"])
+def prometheus_metrics():
+    """Expose application metrics in Prometheus text format."""
+    labels = ",".join(
+        f'{key}="{_escape_label(value)}"'
+        for key, value in (
+            ("application", current_app.config["APP_NAME"]),
+            ("version", current_app.config["APP_VERSION"]),
+            ("environment", current_app.config["ENV"]),
+        )
+    )
+
+    body = (
+        "# HELP clouddeploy_app_uptime_seconds Application uptime in seconds\n"
+        "# TYPE clouddeploy_app_uptime_seconds gauge\n"
+        f"clouddeploy_app_uptime_seconds {time.monotonic() - _START}\n"
+        "# HELP clouddeploy_app_metrics_requests_total Requests made to the JSON metrics endpoint\n"
+        "# TYPE clouddeploy_app_metrics_requests_total counter\n"
+        f"clouddeploy_app_metrics_requests_total {_REQ_COUNT}\n"
+        "# HELP clouddeploy_app_info Static application information\n"
+        "# TYPE clouddeploy_app_info gauge\n"
+        f"clouddeploy_app_info{{{labels}}} 1\n"
+    )
+
+    return Response(body, mimetype=_PROMETHEUS_CONTENT_TYPE)
