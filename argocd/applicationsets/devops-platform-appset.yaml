@@ -22,7 +22,7 @@ spec:
           - environment: dev
             namespace: dev
             valuesFile: values-dev.yaml
-            imageTag: sha-b28d7e3
+            imageTag: sha-e1d9ed4
             replicaCount: "2"
             logLevel: debug
             syncPolicy: automated
