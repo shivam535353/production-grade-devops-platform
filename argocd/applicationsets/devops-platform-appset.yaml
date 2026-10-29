@@ -30,7 +30,7 @@ spec:
           - environment: production
             namespace: production
             valuesFile: values-prod.yaml
-            imageTag: sha-b28d7e3
+            imageTag: v1
             replicaCount: "3"
             logLevel: info
             syncPolicy: manual
