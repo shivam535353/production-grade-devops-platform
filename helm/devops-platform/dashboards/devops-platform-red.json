@@ -131,7 +131,7 @@
         {
           "refId": "A",
           "legendFormat": "{{pod}}",
-          "expr": "sum(rate(container_cpu_usage_seconds_total{namespace=\"$namespace\", pod=~\"devops-platform-.*\", container!=\"\"}[2m])) by (pod)"
+          "expr": "sum by (pod) (rate(container_cpu_usage_seconds_total{namespace=\"$namespace\"}[5m]))"
         }
       ]
     },
@@ -144,7 +144,7 @@
         {
           "refId": "A",
           "legendFormat": "{{pod}}",
-          "expr": "sum(container_memory_working_set_bytes{namespace=\"$namespace\", pod=~\"devops-platform-.*\", container!=\"\"}) by (pod)"
+          "expr": "sum by (pod) (container_memory_working_set_bytes{namespace=\"$namespace\"})"
         }
       ]
     }
