@@ -1,4 +1,4 @@
-﻿# =============================================================================
+# =============================================================================
 # production-grade-devops-platform — GitHub Actions CI/CD Pipeline
 # =============================================================================
 
@@ -309,7 +309,7 @@ jobs:
 
       - name: "📦 Upload failure diagnostics"
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: verify-image-failure-logs
           path: failure-logs/
