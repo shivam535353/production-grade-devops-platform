@@ -43,3 +43,7 @@ serviceMonitor:
 
 grafanaDashboard:
   enabled: true
+
+prometheusRule:
+  enabled: true
+  testAlert: false  
