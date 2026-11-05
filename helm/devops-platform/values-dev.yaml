@@ -46,4 +46,4 @@ grafanaDashboard:
 
 prometheusRule:
   enabled: true
-  testAlert: true
+  testAlert: false
