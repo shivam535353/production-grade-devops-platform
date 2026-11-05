@@ -1,0 +1,66 @@
+# =============================================================================
+# kube-prometheus-stack: lean values for Minikube
+# =============================================================================
+
+prometheus:
+  prometheusSpec:
+    retention: 3d
+    # Discover ServiceMonitors/PodMonitors in ALL namespaces, not only ones
+    # carrying this Helm release's label. Needed for our app in "dev"/"production".
+    serviceMonitorSelectorNilUsesHelmValues: false
+    podMonitorSelectorNilUsesHelmValues: false
+    ruleSelectorNilUsesHelmValues: false
+    resources:
+      requests:
+        cpu: 100m
+        memory: 400Mi
+      limits:
+        memory: 900Mi
+
+grafana:
+  enabled: true
+  defaultDashboardsEnabled: true
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      memory: 768Mi
+  # adminPassword is passed at install time
+  # adminPassword is NOT set here. It is passed at install time (never commit it).
+
+# Enabled later in Step 4, once we write alert rules
+alertmanager:
+  enabled: true
+  alertmanagerSpec:
+    resources:
+      requests:
+        cpu: 25m
+        memory: 64Mi
+      limits:
+        memory: 128Mi
+  config:
+    route:
+      receiver: "null"
+    receivers:
+      - name: "null"
+
+# Minikube control-plane components bind to localhost, so Prometheus cannot
+# scrape them. Leaving them on would show permanent "down" targets and false alerts.
+kubeControllerManager:
+  enabled: false
+kubeScheduler:
+  enabled: false
+kubeEtcd:
+  enabled: false
+kubeProxy:
+  enabled: false
+
+# -----------------------------------------------------------------------------
+# Prometheus ServiceMonitor (requires Prometheus Operator CRDs in the cluster)
+# -----------------------------------------------------------------------------
+serviceMonitor:
+  enabled: false
+  path: /prometheus-metrics
+  interval: 30s
+  scrapeTimeout: 10s 
