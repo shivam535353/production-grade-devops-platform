@@ -7,7 +7,7 @@ namespace: dev
 image:
   repository: ghcr.io/shivam535353/production-grade-devops-platform
   tag: "sha-163b516"
-  pullPolicy: IfNotPresent  
+  pullPolicy: IfNotPresent
 
 replicaCount: 2
 
@@ -30,16 +30,20 @@ configMap:
     APP_ENV: "development"
     LOG_LEVEL: "debug"
     CLOUD_PLATFORM: "Minikube"
-    GITOPS_ENABLED: "true"        # ← line add 
-    DEMO_VERSION: "section-8"  
-    FEATURE_FLAG_NEW_UI: "true" 
+    GITOPS_ENABLED: "true"        # ← line add
+    DEMO_VERSION: "section-8"
+    FEATURE_FLAG_NEW_UI: "true"
 
 secret:
-  enabled: false  
+  enabled: false
   secretKey: "local-dev-secret-12345"
 
 serviceMonitor:
-  enabled: true  
+  enabled: true
 
 grafanaDashboard:
-  enabled: true  
+  enabled: true
+
+prometheusRule:
+  enabled: true
+  testAlert: true

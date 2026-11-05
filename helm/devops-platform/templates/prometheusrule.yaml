@@ -1,0 +1,79 @@
+{{- if .Values.prometheusRule.enabled }}
+{{- $ns := .Values.namespace | default "default" }}
+{{- $name := include "devops-platform.fullname" . }}
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: {{ $name }}
+  namespace: {{ $ns }}
+  labels:
+    {{- include "devops-platform.labels" . | nindent 4 }}
+spec:
+  groups:
+    - name: {{ $name }}.rules
+      rules:
+        - alert: DevOpsPlatformHighErrorRate
+          expr: |
+            (
+              sum(rate(flask_http_request_total{namespace="{{ $ns }}",status=~"5.."}[5m])) or vector(0)
+            ) / sum(rate(flask_http_request_total{namespace="{{ $ns }}"}[5m]))
+            > {{ .Values.prometheusRule.errorRateThreshold }}
+          for: 5m
+          labels:
+            severity: critical
+          annotations:
+            summary: "High 5xx error rate in namespace {{ $ns }}"
+            description: "{{ `5xx ratio is {{ $value | humanizePercentage }}` }}"
+
+        - alert: DevOpsPlatformHighLatencyP95
+          expr: |
+            histogram_quantile(0.95,
+              sum(rate(flask_http_request_duration_seconds_bucket{namespace="{{ $ns }}"}[5m])) by (le)
+            ) > {{ .Values.prometheusRule.latencyP95Seconds }}
+          for: 10m
+          labels:
+            severity: warning
+          annotations:
+            summary: "p95 latency is high in namespace {{ $ns }}"
+            description: "{{ `p95 latency is {{ $value | humanizeDuration }}` }}"
+
+        - alert: DevOpsPlatformTargetDown
+          expr: up{namespace="{{ $ns }}", job=~".*{{ $name }}.*"} == 0
+          for: 2m
+          labels:
+            severity: critical
+          annotations:
+            summary: "Metrics target is down in namespace {{ $ns }}"
+            description: "{{ `Pod {{ $labels.pod }} cannot be scraped` }}"
+
+        - alert: DevOpsPlatformReplicasUnavailable
+          expr: |
+            kube_deployment_status_replicas_available{namespace="{{ $ns }}", deployment="{{ $name }}"}
+              < on(namespace, deployment)
+            kube_deployment_spec_replicas{namespace="{{ $ns }}", deployment="{{ $name }}"}
+          for: 5m
+          labels:
+            severity: critical
+          annotations:
+            summary: "Deployment {{ $name }} has unavailable replicas"
+            description: "{{ `Only {{ $value }} replicas are available` }}"
+
+        - alert: DevOpsPlatformCrashLooping
+          expr: increase(kube_pod_container_status_restarts_total{namespace="{{ $ns }}", pod=~"{{ $name }}-.*"}[15m]) > 3
+          for: 1m
+          labels:
+            severity: warning
+          annotations:
+            summary: "Pod is restarting repeatedly in namespace {{ $ns }}"
+            description: "{{ `Pod {{ $labels.pod }} restarted {{ $value }} times in 15m` }}"
+
+        {{- if .Values.prometheusRule.testAlert }}
+        - alert: DevOpsPlatformTestAlert
+          expr: vector(1)
+          for: 1m
+          labels:
+            severity: warning
+          annotations:
+            summary: "Test alert: the alerting pipeline works"
+        {{- end }}
+{{- end }}

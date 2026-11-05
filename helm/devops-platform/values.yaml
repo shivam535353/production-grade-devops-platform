@@ -165,3 +165,10 @@ grafanaDashboard:
 
 serviceMonitor:
   enabled: false
+
+# Prometheus alert rules
+prometheusRule:
+  enabled: false
+  errorRateThreshold: 0.05
+  latencyP95Seconds: 1
+  testAlert: false

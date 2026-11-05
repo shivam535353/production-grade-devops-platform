@@ -55,10 +55,13 @@ quota:
   requestsMemory: "8Gi"
   limitsCpu: "8"
   limitsMemory: "16Gi"
-  maxPods: "30" 
+  maxPods: "30"
 
 grafanaDashboard:
   enabled: true
 
 serviceMonitor:
-  enabled: true  
+  enabled: true
+
+prometheusRule:
+  enabled: true
