@@ -1,4 +1,5 @@
 argocd-windows-amd64.exe
+
 # Raw/plaintext secrets — NEVER commit
 /tmp/
 *raw-secret*
@@ -10,3 +11,6 @@ __pycache__/
 *.py[cod]
 .pytest_cache/
 .venv/
+
+# Local ArgoCD backups - do not commit
+argocd-backup/

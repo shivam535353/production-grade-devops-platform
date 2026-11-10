@@ -1,0 +1,30 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: load-generator
+  namespace: dev
+spec:
+  backoffLimit: 0                 # never retry a load test automatically
+  activeDeadlineSeconds: 420      # hard stop after 7 min (test itself runs 6 min)
+  ttlSecondsAfterFinished: 300    # auto-delete the Job 5 min after it ends
+  template:
+    metadata:
+      labels:
+        app: load-generator
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: hey
+          image: williamyeh/hey
+          args:
+            - "-z"
+            - "6m"                # run for 6 minutes
+            - "-c"
+            - "30"                # 30 concurrent connections
+            - "http://devops-platform.dev.svc.cluster.local/"
+          resources:
+            requests:
+              cpu: 100m
+              memory: 64Mi
+            limits:
+              memory: 128Mi
