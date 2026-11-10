@@ -53,4 +53,10 @@ grafanaDashboard:
 
 prometheusRule:
   enabled: true
-  testAlert: false  
+  testAlert: false
+
+# -----------------------------------------------------------------------------
+# NetworkPolicy — Development
+# -----------------------------------------------------------------------------
+networkPolicy:
+  enabled: true

@@ -33,9 +33,18 @@ replicaCount: 2
 # -----------------------------------------------------------------------------
 serviceAccount:
   create: true
-  automount: true
+  automount: false      # app never calls the Kubernetes API
   annotations: {}
   name: ""
+
+# -----------------------------------------------------------------------------
+# NetworkPolicy (enforced only if the cluster CNI supports it)
+# -----------------------------------------------------------------------------
+networkPolicy:
+  enabled: false
+  allowedNamespaces:
+    - monitoring              # Prometheus scrapes /prometheus-metrics
+  extraIngressFrom: []        # e.g. ALB / ingress controller sources (EKS week)
 
 # -----------------------------------------------------------------------------
 # Pod Annotations & Labels (extra, beyond standard ones)
@@ -51,13 +60,25 @@ podSecurityContext:
   runAsUser: 1001
   runAsGroup: 1001
   fsGroup: 1001
+  seccompProfile:
+    type: RuntimeDefault
 
 securityContext:
   allowPrivilegeEscalation: false
-  readOnlyRootFilesystem: false
+  readOnlyRootFilesystem: true
   capabilities:
     drop:
       - ALL
+
+# Writable scratch space, since the root filesystem is read-only.
+# Gunicorn keeps worker heartbeat files in /tmp.
+volumes:
+  - name: tmp
+    emptyDir:
+      sizeLimit: 64Mi
+volumeMounts:
+  - name: tmp
+    mountPath: /tmp
 
 # -----------------------------------------------------------------------------
 # Service

@@ -58,4 +58,11 @@ quota:
   maxPods: "30" 
 
 grafanaDashboard:
-  enabled: true  
+  enabled: true
+
+networkPolicy:
+  enabled: true
+  # EKS week TODO: add the ALB source here, for example the VPC CIDR:
+  # extraIngressFrom:
+  #   - ipBlock:
+  #       cidr: 10.0.0.0/16
