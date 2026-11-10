@@ -18,7 +18,9 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 
 WORKDIR /build
 
-RUN apt-get update && apt-get install -y --no-install-recommends \
+RUN apt-get update \
+    && apt-get upgrade -y \
+    && apt-get install -y --no-install-recommends \
         gcc \
         libffi-dev \
     && rm -rf /var/lib/apt/lists/*
@@ -47,6 +49,11 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 # Non-root user for security
 RUN groupadd --gid 1001 appgroup \
     && useradd --uid 1001 --gid appgroup --shell /bin/bash --no-create-home appuser
+
+# Apply Debian security updates
+RUN apt-get update \
+    && apt-get upgrade -y \
+    && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 

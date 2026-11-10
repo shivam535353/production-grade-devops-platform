@@ -90,39 +90,75 @@ jobs:
                   print(f'PASS {ep}')
           print('All endpoints healthy.')
           "
-  # ---------------------------------------------------------------------------
-  # JOB 2: security — Trivy vulnerability scan
+    # ---------------------------------------------------------------------------
+  # JOB 2: security: image CVEs + misconfigurations + secrets
   # ---------------------------------------------------------------------------
   security:
     name: "🔒 Security Scan"
     runs-on: ubuntu-latest
     needs: test
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      security-events: write      # needed only to upload SARIF to the Security tab
 
     steps:
-
       - name: "📥 Checkout repository"
         uses: actions/checkout@v4
 
-      - name: "🛠️ Install Trivy"
-        run: |
-          sudo apt-get install wget apt-transport-https gnupg -y
-          wget -qO - https://aquasecurity.github.io/trivy-repo/deb/public.key \
-            | gpg --dearmor \
-            | sudo tee /usr/share/keyrings/trivy.gpg > /dev/null
-          echo "deb [signed-by=/usr/share/keyrings/trivy.gpg] \
-            https://aquasecurity.github.io/trivy-repo/deb generic main" \
-            | sudo tee /etc/apt/sources.list.d/trivy.list
-          sudo apt-get update -qq
-          sudo apt-get install trivy -y
-      - name: "🛡️ Run Trivy filesystem scan"
-        run: |
-          trivy fs . \
-            --severity CRITICAL \
-            --ignore-unfixed \
-            --exit-code 1 \
-            --no-progress \
-            --format table
-          echo "Trivy scan complete — no CRITICAL vulnerabilities found!"
+      - name: "🐳 Build image for scanning"
+        run: docker build -t ${{ env.IMAGE_NAME }}:scan .
+
+      # 1. Misconfiguration scan: report-only until Step 2 fixes the findings
+      - name: "🧰 Trivy config scan (Dockerfile, Helm, K8s YAML)"
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          scan-type: config
+          scan-ref: .
+          format: table
+          severity: HIGH,CRITICAL
+          exit-code: 0
+
+      # 2. Secret scan: blocking from day one
+      - name: "🔑 Trivy secret scan"
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          scan-type: fs
+          scan-ref: .
+          scanners: secret
+          format: table
+          exit-code: 1
+
+      # 3. Image scan: produce SARIF for the GitHub Security tab (never fails)
+      - name: "🛡️ Trivy image scan (SARIF report)"
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          image-ref: ${{ env.IMAGE_NAME }}:scan
+          format: sarif
+          output: trivy-image.sarif
+          severity: HIGH,CRITICAL
+          limit-severities-for-sarif: true
+          ignore-unfixed: true
+          trivyignores: .trivyignore
+          exit-code: 0
+
+      - name: "📤 Upload SARIF to GitHub Security tab"
+        if: always() && github.event_name != 'pull_request'
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: trivy-image.sarif
+          category: trivy-image
+
+      # 4. Image scan: the actual gate
+      - name: "🚦 Trivy image gate (fails on HIGH/CRITICAL)"
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          image-ref: ${{ env.IMAGE_NAME }}:scan
+          format: table
+          severity: HIGH,CRITICAL
+          ignore-unfixed: true
+          trivyignores: .trivyignore
+          exit-code: 1
   # ---------------------------------------------------------------------------
   # JOB 3: build-push — SECTION 6 + 7
   # Docker build with production tags + GHCR push
