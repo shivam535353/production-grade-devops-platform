@@ -111,7 +111,7 @@ jobs:
 
       # 1. Misconfiguration scan: report-only until Step 2 fixes the findings
       - name: "🧰 Trivy config scan (Dockerfile, Helm, K8s YAML)"
-        uses: aquasecurity/trivy-action@0.28.0
+        uses: aquasecurity/trivy-action@v0.36.0
         with:
           scan-type: config
           scan-ref: .
@@ -121,7 +121,7 @@ jobs:
 
       # 2. Secret scan: blocking from day one
       - name: "🔑 Trivy secret scan"
-        uses: aquasecurity/trivy-action@0.28.0
+        uses: aquasecurity/trivy-action@v0.36.0
         with:
           scan-type: fs
           scan-ref: .
@@ -131,7 +131,7 @@ jobs:
 
       # 3. Image scan: produce SARIF for the GitHub Security tab (never fails)
       - name: "🛡️ Trivy image scan (SARIF report)"
-        uses: aquasecurity/trivy-action@0.28.0
+        uses: aquasecurity/trivy-action@v0.36.0
         with:
           image-ref: ${{ env.IMAGE_NAME }}:scan
           format: sarif
@@ -151,7 +151,7 @@ jobs:
 
       # 4. Image scan: the actual gate
       - name: "🚦 Trivy image gate (fails on HIGH/CRITICAL)"
-        uses: aquasecurity/trivy-action@0.28.0
+        uses: aquasecurity/trivy-action@v0.36.0
         with:
           image-ref: ${{ env.IMAGE_NAME }}:scan
           format: table
