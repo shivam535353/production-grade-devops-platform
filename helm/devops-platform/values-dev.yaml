@@ -54,3 +54,28 @@ grafanaDashboard:
 prometheusRule:
   enabled: true
   testAlert: false
+
+# NetworkPolicy — Development
+networkPolicy:
+  enabled: true
+
+
+# Phase 8 - Step 2: DEV runtime hardening
+serviceAccount:
+  automount: false
+
+podSecurityContext:
+  seccompProfile:
+    type: RuntimeDefault
+
+securityContext:
+  readOnlyRootFilesystem: true
+
+volumes:
+  - name: tmp
+    emptyDir:
+      sizeLimit: 64Mi
+
+volumeMounts:
+  - name: tmp
+    mountPath: /tmp

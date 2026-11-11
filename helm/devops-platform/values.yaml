@@ -59,6 +59,10 @@ securityContext:
     drop:
       - ALL
 
+volumes: []
+
+volumeMounts: []
+
 # -----------------------------------------------------------------------------
 # Service
 # -----------------------------------------------------------------------------
@@ -172,3 +176,10 @@ prometheusRule:
   errorRateThreshold: 0.05
   latencyP95Seconds: 1
   testAlert: false
+
+# NetworkPolicy defaults
+networkPolicy:
+  enabled: false
+  allowedNamespaces:
+    - monitoring
+  extraIngressFrom: []
