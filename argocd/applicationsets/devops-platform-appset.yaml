@@ -12,6 +12,9 @@ metadata:
     app.kubernetes.io/name: devops-platform-appset
     app.kubernetes.io/managed-by: argocd
 spec:
+  syncPolicy:
+    preserveResourcesOnDeletion: true
+
   # ---------------------------------------------------------------------------
   # Generator — environments chi list
   # Pratyeka entry sathi ek Application generate hoto
@@ -19,14 +22,6 @@ spec:
   generators:
     - list:
         elements:
-          - environment: dev
-            namespace: dev
-            valuesFile: values-dev.yaml
-            imageTag: sha-e1d9ed4
-            replicaCount: "2"
-            logLevel: debug
-            syncPolicy: automated
-
           - environment: production
             namespace: production
             valuesFile: values-prod.yaml
