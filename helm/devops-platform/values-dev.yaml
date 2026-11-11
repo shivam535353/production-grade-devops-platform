@@ -6,7 +6,7 @@ namespace: dev
 
 image:
   repository: ghcr.io/shivam535353/production-grade-devops-platform
-  tag: "sha-d5011f9"
+  tag: "sha-a2386fd"
   pullPolicy: IfNotPresent
 
 replicaCount: 2
