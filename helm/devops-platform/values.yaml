@@ -147,11 +147,15 @@ configMap:
     CLOUD_PLATFORM: "Minikube"
 
 # -----------------------------------------------------------------------------
-# Secret (values injected via --set or CI/CD, never hardcoded here)
+# Secret: the chart never stores real values.
+# Option A (used here): existingSecret names a Secret created outside Git.
+# Option B (quick local tests only): leave existingSecret empty and pass
+#   --set secret.secretKey=... on a manual `helm install` (not for GitOps).
 # -----------------------------------------------------------------------------
 secret:
   enabled: true
-  secretKey: "change-me-local-dev-only"
+  existingSecret: ""       # name of a pre-created Secret with key "secret-key"
+  secretKey: ""            # NEVER commit a real value here
 
 # -----------------------------------------------------------------------------
 # Node Scheduling
