@@ -49,8 +49,8 @@ spec:
             - name: SECRET_KEY
               valueFrom:
                   secretKeyRef:
-                  name: {{ .Values.secret.existingSecret | default (printf "%s-secret" (include "devops-platform.fullname" .)) }}
-                  key: secret-key
+                   name: {{ .Values.secret.existingSecret | default (printf "%s-secret" (include "devops-platform.fullname" .)) }}
+                   key: secret-key
           {{- end }}   
           {{- if .Values.configMap.enabled }}
           envFrom:
