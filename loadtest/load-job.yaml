@@ -1,0 +1,46 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: load-generator
+  namespace: dev
+spec:
+  backoffLimit: 0
+  activeDeadlineSeconds: 420
+  ttlSecondsAfterFinished: 300
+  template:
+    metadata:
+      labels:
+        app: load-generator
+    spec:
+      restartPolicy: Never
+
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 65534
+        runAsGroup: 65534
+        seccompProfile:
+          type: RuntimeDefault
+
+      containers:
+        - name: hey
+          image: williamyeh/hey
+          args:
+            - "-z"
+            - "6m"
+            - "-c"
+            - "30"
+            - "http://devops-platform.dev.svc.cluster.local/"
+
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL
+
+          resources:
+            requests:
+              cpu: 100m
+              memory: 64Mi
+            limits:
+              memory: 128Mi
