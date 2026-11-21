@@ -13,7 +13,7 @@
         "label": "Namespace",
         "type": "query",
         "datasource": { "type": "prometheus", "uid": "prometheus" },
-        "query": { "query": "label_values(flask_http_request_total, namespace)", "refId": "ns" },
+        "query": { "query": "label_values(http_requests_total, namespace)", "refId": "ns" },
         "refresh": 2,
         "sort": 1,
         "current": {}
@@ -27,7 +27,7 @@
       "datasource": { "type": "prometheus", "uid": "prometheus" },
       "fieldConfig": { "defaults": { "unit": "reqps" }, "overrides": [] },
       "targets": [
-        { "refId": "A", "expr": "sum(rate(flask_http_request_total{namespace=\"$namespace\"}[1m]))" }
+        { "refId": "A", "expr": "sum(rate(http_requests_total{namespace=\"$namespace\"}[1m]))" }
       ]
     },
     {
@@ -52,7 +52,7 @@
       "targets": [
         {
           "refId": "A",
-          "expr": "(sum(rate(flask_http_request_total{namespace=\"$namespace\",status=~\"5..\"}[5m])) or vector(0)) / sum(rate(flask_http_request_total{namespace=\"$namespace\"}[5m]))"
+          "expr": "(sum(rate(http_requests_total{namespace=\"$namespace\",status=~\"5..\"}[5m])) or vector(0)) / sum(rate(http_requests_total{namespace=\"$namespace\"}[5m]))"
         }
       ]
     },
@@ -64,7 +64,7 @@
       "targets": [
         {
           "refId": "A",
-          "expr": "histogram_quantile(0.95, sum(rate(flask_http_request_duration_seconds_bucket{namespace=\"$namespace\"}[5m])) by (le))"
+          "expr": "histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket{namespace=\"$namespace\"}[5m])) by (le))"
         }
       ]
     },
@@ -84,8 +84,8 @@
       "targets": [
         {
           "refId": "A",
-          "legendFormat": "{{path}}",
-          "expr": "sum by (endpoint) (rate(flask_http_request_total{namespace=\"$namespace\"}[1m]))"
+          "legendFormat": "{{endpoint}}",
+          "expr": "sum by (endpoint) (rate(http_requests_total{namespace=\"$namespace\"}[1m]))"
         }
       ]
     },
@@ -97,15 +97,15 @@
       "targets": [
         {
           "refId": "A", "legendFormat": "p50",
-          "expr": "histogram_quantile(0.50, sum(rate(flask_http_request_duration_seconds_bucket{namespace=\"$namespace\"}[5m])) by (le))"
+          "expr": "histogram_quantile(0.50, sum(rate(http_request_duration_seconds_bucket{namespace=\"$namespace\"}[5m])) by (le))"
         },
         {
           "refId": "B", "legendFormat": "p95",
-          "expr": "histogram_quantile(0.95, sum(rate(flask_http_request_duration_seconds_bucket{namespace=\"$namespace\"}[5m])) by (le))"
+          "expr": "histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket{namespace=\"$namespace\"}[5m])) by (le))"
         },
         {
           "refId": "C", "legendFormat": "p99",
-          "expr": "histogram_quantile(0.99, sum(rate(flask_http_request_duration_seconds_bucket{namespace=\"$namespace\"}[5m])) by (le))"
+          "expr": "histogram_quantile(0.99, sum(rate(http_request_duration_seconds_bucket{namespace=\"$namespace\"}[5m])) by (le))"
         }
       ]
     },
@@ -118,7 +118,7 @@
         {
           "refId": "A",
           "legendFormat": "{{status}}",
-          "expr": "sum(rate(flask_http_request_total{namespace=\"$namespace\"}[1m])) by (status)"
+          "expr": "sum(rate(http_requests_total{namespace=\"$namespace\"}[1m])) by (status)"
         }
       ]
     },

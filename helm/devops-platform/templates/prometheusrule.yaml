@@ -15,8 +15,8 @@ spec:
         - alert: DevOpsPlatformHighErrorRate
           expr: |
             (
-              sum(rate(flask_http_request_total{namespace="{{ $ns }}",status=~"5.."}[5m])) or vector(0)
-            ) / sum(rate(flask_http_request_total{namespace="{{ $ns }}"}[5m]))
+              sum(rate(http_requests_total{namespace="{{ $ns }}",status=~"5.."}[5m])) or vector(0)
+            ) / sum(rate(http_requests_total{namespace="{{ $ns }}"}[5m]))
             > {{ .Values.prometheusRule.errorRateThreshold }}
           for: 5m
           labels:
@@ -28,7 +28,7 @@ spec:
         - alert: DevOpsPlatformHighLatencyP95
           expr: |
             histogram_quantile(0.95,
-              sum(rate(flask_http_request_duration_seconds_bucket{namespace="{{ $ns }}"}[5m])) by (le)
+              sum(rate(http_request_duration_seconds_bucket{namespace="{{ $ns }}"}[5m])) by (le)
             ) > {{ .Values.prometheusRule.latencyP95Seconds }}
           for: 10m
           labels:
