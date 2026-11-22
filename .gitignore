@@ -19,3 +19,21 @@ __pycache__/
 # Local ArgoCD backups
 argocd-backup/
 argocd-redis-backup.yaml
+
+# Terraform local files and state — NEVER commit
+**/.terraform/
+*.tfstate
+*.tfstate.*
+*.tfplan
+crash.log
+crash.*.log
+
+# Terraform variable files may contain secrets
+*.tfvars
+*.tfvars.json
+
+# Terraform override files
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
