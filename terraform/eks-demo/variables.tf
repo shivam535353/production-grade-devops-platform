@@ -26,3 +26,32 @@ variable "az_count" {
     error_message = "This demo network is designed for exactly 2 Availability Zones."
   }
 }
+
+variable "cluster_version" {
+  description = "Kubernetes version in standard support"
+  type        = string
+  default     = "1.37"
+}
+
+variable "node_instance_type" {
+  description = "EC2 instance type for EKS worker nodes"
+  type        = string
+  default     = "t3.medium"
+}
+
+variable "node_desired_size" {
+  description = "Desired number of EKS worker nodes"
+  type        = number
+  default     = 3
+}
+
+variable "public_access_cidrs" {
+  description = "CIDRs allowed to access the public EKS API endpoint"
+  type        = list(string)
+}
+
+variable "ecr_repository_name" {
+  description = "ECR repository for the application"
+  type        = string
+  default     = "production-grade-devops-platform"
+}
