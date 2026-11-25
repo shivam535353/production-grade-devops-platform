@@ -1,0 +1,92 @@
+namespace: production
+
+replicaCount: 2
+
+image:
+  repository: 822417885434.dkr.ecr.ap-south-1.amazonaws.com/production-grade-devops-platform
+  tag: "sha-21f1234"
+  pullPolicy: IfNotPresent
+
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 1001
+  runAsGroup: 1001
+  fsGroup: 1001
+  seccompProfile:
+    type: RuntimeDefault
+
+securityContext:
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: false
+  capabilities:
+    drop:
+      - ALL
+
+configMap:
+  enabled: true
+  data:
+    APP_ENV: "production"
+    LOG_LEVEL: "info"
+    CLOUD_PLATFORM: "AWS EKS"
+
+secret:
+  enabled: true
+  existingSecret: "devops-platform-app-secret"
+  secretKey: ""
+
+ingress:
+  enabled: true
+  className: alb
+  annotations:
+    kubernetes.io/ingress.class: null
+    alb.ingress.kubernetes.io/scheme: internet-facing
+    alb.ingress.kubernetes.io/target-type: ip
+    alb.ingress.kubernetes.io/healthcheck-path: /health
+    alb.ingress.kubernetes.io/listen-ports: '[{"HTTP":80}]'
+  hosts:
+    - host: ""
+      paths:
+        - path: /
+          pathType: Prefix
+          port: 80
+  tls: []
+
+autoscaling:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 6
+  targetCPUUtilizationPercentage: 60
+  targetMemoryUtilizationPercentage: null
+  behavior:
+    scaleUp:
+      stabilizationWindowSeconds: 30
+      podsValue: 2
+      periodSeconds: 60
+    scaleDown:
+      stabilizationWindowSeconds: 300
+      podsValue: 1
+      periodSeconds: 120
+
+networkPolicy:
+  enabled: true
+  allowedNamespaces:
+    - monitoring
+  extraIngressFrom:
+    - ipBlock:
+        cidr: 10.0.0.0/16
+
+serviceMonitor:
+  enabled: true
+  path: /metrics/prometheus
+  interval: 30s
+  scrapeTimeout: 10s
+
+prometheusRule:
+  enabled: true
+  errorRateThreshold: 0.05
+  latencyP95Seconds: 1
+  testAlert: false
+
+grafanaDashboard:
+  enabled: true
+  folder: "Applications"
