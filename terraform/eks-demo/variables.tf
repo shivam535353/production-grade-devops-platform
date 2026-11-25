@@ -49,9 +49,3 @@ variable "public_access_cidrs" {
   description = "CIDRs allowed to access the public EKS API endpoint"
   type        = list(string)
 }
-
-variable "ecr_repository_name" {
-  description = "ECR repository for the application"
-  type        = string
-  default     = "production-grade-devops-platform"
-}

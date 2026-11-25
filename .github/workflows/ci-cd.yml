@@ -119,120 +119,20 @@ jobs:
   # Docker build with production tags + GHCR push
   # ---------------------------------------------------------------------------
   build-push:
-    name: "🐳 Build & Push Image"
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
+    name: "Docker Build and Push to GHCR + ECR"
+    needs: [test, security]
+    uses: ./.github/workflows/reusable-docker-build.yml
     permissions:
       contents: read
       packages: write
-    needs: [test, security]
-    # Both test and security jobs must pass before this job runs
+      id-token: write
+    with:
+      image-name: ghcr.io/${{ github.repository }}
+      ecr-repository: 822417885434.dkr.ecr.ap-south-1.amazonaws.com/production-grade-devops-platform
+      aws-role-arn: ${{ vars.AWS_ROLE_ARN }}
+      aws-region: ap-south-1
+      push: ${{ github.event_name != 'pull_request' }}
 
-    # Job-level outputs — passes image tag to the next job
-    outputs:
-      image-tag: ${{ steps.meta.outputs.version }}
-      image-digest: ${{ steps.build.outputs.digest }}
-
-    steps:
-
-      # STEP 1: Checkout code from repository onto the runner
-      - name: "📥 Checkout repository"
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
-
-      # STEP 2: Set up Docker Buildx
-      # Enables advanced build engine with:
-      # - Multi-platform support (linux/amd64 + linux/arm64)
-      # - GitHub Actions cache backend support
-      # - Parallel layer building for faster builds
-      - name: "🔧 Set up Docker Buildx"
-        uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069
-
-      # STEP 3: Authenticate to GitHub Container Registry (GHCR)
-      # github.actor  = username of whoever triggered the workflow
-      # GITHUB_TOKEN  = automatically injected by GitHub Actions, no manual setup needed
-      # Token scope   = write access only to this repo's packages (least privilege)
-      - name: "🔑 Log in to GitHub Container Registry"
-        uses: docker/login-action@81c6f93d4bc991e510b342a00b419b3bb4efc5c6
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      # STEP 4: Generate Docker image tags and OCI labels
-      # Produces 4 tags per build:
-      #   :latest              → always points to the newest main branch build
-      #   :sha-abc1234         → short 7-char git SHA, immutable, used for production deploys
-      #   :main-20240717-143022 → branch + timestamp, useful for chronological tracking
-      #   :pr-42               → auto-generated for pull request builds, cleaned up after merge
-      # Also embeds OCI-standard metadata labels into the image
-      - name: "🏷️ Extract Docker metadata"
-        id: meta
-        uses: docker/metadata-action@dc802804100637a589fabce1cb79ff13a1411302
-        with:
-          images: ${{ env.IMAGE_NAME }}
-          tags: |
-            # Tag 1: latest — only on default branch (main)
-            type=raw,value=latest,enable={{is_default_branch}}
-            # Tag 2: short SHA — immutable, production deployment standard
-            type=sha,prefix=sha-,format=short
-            # Tag 3: branch + date + time — chronological build tracking
-            type=ref,event=branch,suffix=-{{date 'YYYYMMDD-HHmmss'}}
-            # Tag 4: PR reference — auto-tagged on pull request builds
-            type=ref,event=pr,prefix=pr-
-          labels: |
-            org.opencontainers.image.title=production-grade-devops-platform
-            org.opencontainers.image.description=Multi-Environment CI/CD Platform
-            org.opencontainers.image.vendor=Shivam Gadilkar
-            org.opencontainers.image.url=https://github.com/shivam535353/production-grade-devops-platform
-      # STEP 5: Build the Docker image and push to GHCR
-      #
-      # push: false on pull_request — image is built (to catch Dockerfile errors)
-      #       but NOT pushed, because unreviewed code should not enter the registry
-      # push: true on main/develop push — build and push both happen
-      #
-      # platforms: linux/amd64 — matches AWS EKS node architecture (x86_64)
-      #
-      # cache-from/cache-to: type=gha
-      #   Uses GitHub Actions cache for Docker layer caching
-      #   mode=max caches all intermediate layers
-      #   First build: 3-5 min | Cache hit builds: 30-60 sec
-      #
-      # build-args: GIT_COMMIT
-      #   Embeds the exact git commit SHA inside the container at build time
-      #   Enables full traceability — you can always tell which commit is running
-      - name: "🏗️ Build and push Docker image"
-        id: build
-        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc
-        with:
-          context: .
-          file: ./Dockerfile
-          push: ${{ github.event_name != 'pull_request' }}
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
-          platforms: linux/amd64
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-          build-args: |
-            GIT_COMMIT=${{ github.sha }}
-            BUILD_DATE=${{ github.event.repository.updated_at }}
-      # STEP 6: Write a formatted build summary to the GitHub Actions Summary page
-      # $GITHUB_STEP_SUMMARY is a special file provided by GitHub Actions
-      # Anything written to it renders as Markdown in the Actions tab → Summary section
-      - name: "📋 Image build summary"
-        run: |
-          echo "## 🐳 Docker Image Build Summary" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "| Key | Value |" >> $GITHUB_STEP_SUMMARY
-          echo "|---|---|" >> $GITHUB_STEP_SUMMARY
-          echo "| Image | \`${{ env.IMAGE_NAME }}\` |" >> $GITHUB_STEP_SUMMARY
-          echo "| Tags | \`${{ steps.meta.outputs.tags }}\` |" >> $GITHUB_STEP_SUMMARY
-          echo "| Digest | \`${{ steps.build.outputs.digest }}\` |" >> $GITHUB_STEP_SUMMARY
-          echo "| Git SHA | \`${{ github.sha }}\` |" >> $GITHUB_STEP_SUMMARY
-          echo "| Triggered by | \`${{ github.actor }}\` |" >> $GITHUB_STEP_SUMMARY
-  # ---------------------------------------------------------------------------
-  # JOB 4: verify-image — SECTION 8
-  # Pull image from GHCR and run smoke test + metadata verification
-  # ---------------------------------------------------------------------------
   verify-image:
     name: "🔍 Verify Image"
     runs-on: ubuntu-latest
@@ -257,7 +157,7 @@ jobs:
       # Verifies the image is accessible, pullable, and not corrupted
       - name: "⬇️ Pull and verify image"
         run: |
-          IMAGE="${{ env.IMAGE_NAME }}:latest"
+          IMAGE="${{ env.IMAGE_NAME }}:sha-${GITHUB_SHA::7}"
           echo "Pulling: $IMAGE"
           docker pull $IMAGE
           echo ""
@@ -280,7 +180,7 @@ jobs:
             -p 5000:5000 \
             -e APP_ENV=testing \
             -e SECRET_KEY=ci-verify-secret \
-            ${{ env.IMAGE_NAME }}:latest
+            ${{ env.IMAGE_NAME }}:sha-${GITHUB_SHA::7}
           echo "Waiting for container health..."
 
           for i in $(seq 1 10); do
@@ -327,7 +227,7 @@ jobs:
       # were properly injected during the build step
       - name: "🏷️ Verify OCI labels"
         run: |
-          IMAGE="${{ env.IMAGE_NAME }}:latest"
+          IMAGE="${{ env.IMAGE_NAME }}:sha-${GITHUB_SHA::7}"
           echo "=== OCI Labels ==="
           docker inspect $IMAGE \
             --format='{{json .Config.Labels}}' | \

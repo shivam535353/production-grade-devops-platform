@@ -1,0 +1,105 @@
+name: Reusable Docker Build and Push
+
+on:
+  workflow_call:
+    inputs:
+      image-name:
+        description: "Primary GHCR image name"
+        required: true
+        type: string
+      push:
+        description: "Whether to push the image"
+        required: true
+        type: boolean
+      ecr-repository:
+        description: "Full AWS ECR repository URI"
+        required: false
+        type: string
+        default: ""
+      aws-role-arn:
+        description: "IAM role ARN for GitHub OIDC"
+        required: false
+        type: string
+        default: ""
+      aws-region:
+        description: "AWS region"
+        required: false
+        type: string
+        default: "ap-south-1"
+    outputs:
+      digest:
+        description: "Built image digest"
+        value: ${{ jobs.build.outputs.digest }}
+
+jobs:
+  build:
+    name: Build and Push Docker Image
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    permissions:
+      contents: read
+      packages: write
+      id-token: write
+
+    outputs:
+      digest: ${{ steps.build.outputs.digest }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GitHub Container Registry
+        if: inputs.push
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Configure AWS credentials with OIDC
+        if: inputs.push && inputs.aws-role-arn != ''
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ inputs.aws-role-arn }}
+          aws-region: ${{ inputs.aws-region }}
+
+      - name: Log in to Amazon ECR
+        if: inputs.push && inputs.aws-role-arn != '' && inputs.ecr-repository != ''
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Extract Docker metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: |
+            ${{ inputs.image-name }}
+            ${{ inputs.ecr-repository }}
+          tags: |
+            type=raw,value=latest,enable={{is_default_branch}}
+            type=sha,format=short,prefix=sha-
+            type=semver,pattern={{version}}
+            type=ref,event=pr,prefix=pr-
+
+      - name: Build and push Docker image
+        id: build
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          platforms: linux/amd64
+          push: ${{ inputs.push }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: |
+            ${{ steps.meta.outputs.labels }}
+            org.opencontainers.image.title=production-grade-devops-platform
+            org.opencontainers.image.description=Multi-Environment CI/CD Platform
+            org.opencontainers.image.vendor=Shivam Gadilkar
+            org.opencontainers.image.url=https://github.com/shivam535353/production-grade-devops-platform
+          build-args: |
+            GIT_COMMIT=${{ github.sha }}
+            BUILD_DATE=${{ github.event.repository.updated_at }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
