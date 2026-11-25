@@ -1,0 +1,14 @@
+NAME                              READY   UP-TO-DATE   AVAILABLE   AGE
+deployment.apps/devops-platform   2/2     2            2           4h29m
+
+NAME                      TYPE        CLUSTER-IP     EXTERNAL-IP   PORT(S)   AGE
+service/devops-platform   ClusterIP   172.20.22.18   <none>        80/TCP    4h29m
+
+NAME                                        CLASS   HOSTS   ADDRESS                                                                   PORTS   AGE
+ingress.networking.k8s.io/devops-platform   alb     *       k8s-producti-devopspl-ecc83f68fa-426899812.ap-south-1.elb.amazonaws.com   80      4h29m
+
+NAME                                                  REFERENCE                    TARGETS       MINPODS   MAXPODS   REPLICAS   AGE
+horizontalpodautoscaler.autoscaling/devops-platform   Deployment/devops-platform   cpu: 1%/60%   2         6         2          4h29m
+
+NAME                                              POD-SELECTOR                                                                        AGE
+networkpolicy.networking.k8s.io/devops-platform   app.kubernetes.io/instance=devops-platform,app.kubernetes.io/name=devops-platform   4h29m
