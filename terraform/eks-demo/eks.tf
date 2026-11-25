@@ -44,7 +44,7 @@ module "eks" {
       capacity_type  = "ON_DEMAND"
 
       min_size     = 2
-      max_size     = 4
+      max_size     = 2
       desired_size = var.node_desired_size
     }
   }
