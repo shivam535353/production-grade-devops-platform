@@ -1,843 +1,1280 @@
-# "Sealed Secrets" for Kubernetes
+# Production-Grade DevOps Platform
 
-[![](https://img.shields.io/badge/install-docs-brightgreen.svg)](#Installation)
-[![](https://img.shields.io/github/release/bitnami-labs/sealed-secrets.svg)](https://github.com/bitnami-labs/sealed-secrets/releases/latest)
-[![](https://img.shields.io/homebrew/v/kubeseal)](https://formulae.brew.sh/formula/kubeseal)
-[![Build Status](https://github.com/bitnami-labs/sealed-secrets/actions/workflows/ci.yml/badge.svg)](https://github.com/bitnami-labs/sealed-secrets/actions/workflows/ci.yml)
-[![](https://img.shields.io/github/v/release/bitnami-labs/sealed-secrets?include_prereleases&label=helm&sort=semver)](https://github.com/bitnami-labs/sealed-secrets/releases)
-[![Download Status](https://img.shields.io/docker/pulls/bitnami/sealed-secrets-controller.svg)](https://hub.docker.com/r/bitnami/sealed-secrets-controller)
-[![Go Report Card](https://goreportcard.com/badge/github.com/bitnami-labs/sealed-secrets)](https://goreportcard.com/report/github.com/bitnami-labs/sealed-secrets)
-![Downloads](https://img.shields.io/github/downloads/bitnami-labs/sealed-secrets/total.svg)
+<p align="center">
+  <strong>Multi-environment CI/CD, GitOps delivery, Kubernetes orchestration and cloud-native observability</strong>
+</p>
 
-**Problem:** "I can manage all my K8s config in git, except Secrets."
+<p align="center">
+  <a href="https://github.com/shivam535353/production-grade-devops-platform"><img src="https://img.shields.io/badge/GitHub-Repository-181717?logo=github" alt="GitHub repository"></a>
+  <img src="https://img.shields.io/badge/Python-3.12-3776AB?logo=python&logoColor=white" alt="Python 3.12">
+  <img src="https://img.shields.io/badge/Flask-3.1-000000?logo=flask" alt="Flask">
+  <img src="https://img.shields.io/badge/Docker-Multi--stage-2496ED?logo=docker&logoColor=white" alt="Docker">
+  <img src="https://img.shields.io/badge/Kubernetes-EKS%20%7C%20Minikube-326CE5?logo=kubernetes&logoColor=white" alt="Kubernetes">
+  <img src="https://img.shields.io/badge/Helm-Charts-0F1689?logo=helm" alt="Helm">
+  <img src="https://img.shields.io/badge/Argo%20CD-GitOps-EF7B4D?logo=argo" alt="Argo CD">
+  <img src="https://img.shields.io/badge/GitHub%20Actions-CI%2FCD-2088FF?logo=githubactions&logoColor=white" alt="GitHub Actions">
+  <img src="https://img.shields.io/badge/Terraform-IaC-7B42BC?logo=terraform&logoColor=white" alt="Terraform">
+  <img src="https://img.shields.io/badge/Prometheus-Monitoring-E6522C?logo=prometheus&logoColor=white" alt="Prometheus">
+  <img src="https://img.shields.io/badge/Grafana-Dashboards-F46800?logo=grafana&logoColor=white" alt="Grafana">
+</p>
 
-**Solution:** Encrypt your Secret into a SealedSecret, which *is* safe
-to store - even inside a public repository. The SealedSecret can be
-decrypted only by the controller running in the target cluster and
-nobody else (not even the original author) is able to obtain the
-original Secret from the SealedSecret.
+**Author:** Shivam Gadilkar  
+**Repository:** [shivam535353/production-grade-devops-platform](https://github.com/shivam535353/production-grade-devops-platform)  
+**Cloud region used for the EKS demonstration:** `ap-south-1` (Asia Pacific — Mumbai)
 
-<!-- START doctoc generated TOC please keep comment here to allow auto update -->
-<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+---
+
+## Table of contents
 
 - [Overview](#overview)
-  - [SealedSecrets as templates for secrets](#sealedsecrets-as-templates-for-secrets)
-  - [Public key / Certificate](#public-key--certificate)
-  - [Scopes](#scopes)
-- [Installation](#installation)
-  - [Controller](#controller)
-    - [Kustomize](#kustomize)
-    - [Helm Chart](#helm-chart)
-  - [Kubeseal](#kubeseal)
-    - [Homebrew](#homebrew)
-    - [MacPorts](#macports)
-    - [Linux](#linux)
-    - [Installation from source](#installation-from-source)
-- [Upgrade](#upgrade)
-- [Usage](#usage)
-  - [Managing existing secrets](#managing-existing-secrets)
-  - [Patching existing secrets](#patching-existing-secrets)
-  - [Update existing secrets](#update-existing-secrets)
-  - [Raw mode (experimental)](#raw-mode-experimental)
-  - [Validate a Sealed Secret](#validate-a-sealed-secret)
-- [Secret Rotation](#secret-rotation)
-  - [Sealing key renewal](#sealing-key-renewal)
-  - [User secret rotation](#user-secret-rotation)
-  - [Early key renewal](#early-key-renewal)
-  - [Common misconceptions about key renewal](#common-misconceptions-about-key-renewal)
-  - [Manual key management (advanced)](#manual-key-management-advanced)
-  - [Re-encryption (advanced)](#re-encryption-advanced)
-- [Details (advanced)](#details-advanced)
-  - [Crypto](#crypto)
-- [Developing](#developing)
-- [FAQ](#faq)
-  - [Will you still be able to decrypt if you no longer have access to your cluster?](#will-you-still-be-able-to-decrypt-if-you-no-longer-have-access-to-your-cluster)
-  - [How can I do a backup of my SealedSecrets?](#how-can-i-do-a-backup-of-my-sealedsecrets)
-  - [Can I decrypt my secrets offline with a backup key?](#can-i-decrypt-my-secrets-offline-with-a-backup-key)
-  - [What flags are available for kubeseal?](#what-flags-are-available-for-kubeseal)
-  - [How do I update parts of JSON/YAML/TOML/.. file encrypted with sealed secrets?](#how-do-i-update-parts-of-jsonyamltoml-file-encrypted-with-sealed-secrets)
-  - [Can I bring my own (pre-generated) certificates?](#can-i-bring-my-own-pre-generated-certificates)
-  - [How to use kubeseal if the controller is not running within the `kube-system` namespace?](#how-to-use-kubeseal-if-the-controller-is-not-running-within-the-kube-system-namespace)
-  - [How to verify the images?](#how-to-verify-the-images)
-  - [How to use one controller for a subset of namespaces](#How-to-use-one-controller-for-a-subset-of-namespaces)
-
-- [Community](#community)
-  - [Related projects](#related-projects)
-
-<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+- [Problem statement](#problem-statement)
+- [Architecture](#architecture)
+- [End-to-end workflow](#end-to-end-workflow)
+- [Technology stack](#technology-stack)
+- [Repository structure](#repository-structure)
+- [Implementation phases and proof of work](#implementation-phases-and-proof-of-work)
+- [Application endpoints](#application-endpoints)
+- [Run locally](#run-locally)
+- [Run with Docker](#run-with-docker)
+- [Kubernetes and Helm deployment](#kubernetes-and-helm-deployment)
+- [AWS deployment notes](#aws-deployment-notes)
+- [Security design](#security-design)
+- [Engineering challenges and learnings](#engineering-challenges-and-learnings)
+- [Future improvements](#future-improvements)
+- [Cost and lifecycle note](#cost-and-lifecycle-note)
+- [License](#license)
 
 ## Overview
 
-Sealed Secrets is composed of two parts:
+The **Production-Grade DevOps Platform** is an end-to-end engineering project that demonstrates how to package a Python web application, validate it through CI, scan source code and container artifacts, publish versioned images, and deploy Kubernetes workloads using Helm and Argo CD.
 
-- A cluster-side controller / operator
-- A client-side utility: `kubeseal`
+The platform was developed incrementally: first as a Flask application and Docker container, then on local Kubernetes (Minikube), and finally as an AWS EKS demonstration. It includes GitOps-managed development/production application definitions, infrastructure-as-code, application metrics, Prometheus/Grafana observability, horizontal pod autoscaling and Kubernetes network-policy validation.
 
-The `kubeseal` utility uses asymmetric crypto to encrypt secrets that only the controller can decrypt.
+The project emphasizes repeatable delivery, explicit configuration, least-privilege cloud access, health checks, and operational evidence rather than a one-command demo.
 
-These encrypted secrets are encoded in a `SealedSecret` resource, which you can see as a recipe for creating
-a secret. Here is how it looks:
+## Problem statement
 
-```yaml
-apiVersion: bitnami.com/v1alpha1
-kind: SealedSecret
-metadata:
-  name: mysecret
-  namespace: mynamespace
-spec:
-  encryptedData:
-    foo: AgBy3i4OJSWK+PiTySYZZA9rO43cGDEq.....
+A working application is only one part of a reliable delivery platform. Teams also need a repeatable way to:
+
+- build consistent container images;
+- catch code and security issues before publishing;
+- promote immutable image references through environments;
+- keep Kubernetes desired state in version control;
+- observe service health and workload behavior;
+- scale application replicas as demand changes; and
+- provision cloud infrastructure in a reproducible, reviewable way.
+
+This repository brings those practices together in one demonstrable workflow.
+
+## Architecture
+
+The diagram below shows the main delivery path and the two runtime targets used in the project: a local Minikube environment and an AWS EKS demonstration environment.
+
+```mermaid
+flowchart TB
+    DEV["Developer"] --> GIT["Git repository<br/>GitHub"]
+    GIT --> CI["GitHub Actions<br/>CI workflow"]
+
+    subgraph PIPELINE["Continuous integration and image delivery"]
+      CI --> TEST["Lint + Flask endpoint tests<br/>Python 3.12"]
+      TEST --> SEC["Security checks<br/>Gitleaks + Trivy filesystem scan"]
+      SEC --> BUILD["Reusable Docker build<br/>Buildx + OCI labels"]
+      BUILD --> GHCR["GitHub Container Registry"]
+      BUILD --> OIDC["GitHub OIDC identity"]
+      OIDC --> IAM["AWS IAM role<br/>short-lived credentials"]
+      IAM --> ECR["Amazon ECR"]
+      GHCR --> VERIFY["Pull image + container health smoke test"]
+      ECR --> VERIFY
+    end
+
+    subgraph GITOPS["GitOps configuration and reconciliation"]
+      CI --> VALUES["Helm values in Git<br/>values-dev.yaml / values-eks.yaml"]
+      VALUES --> ARGO["Argo CD"]
+      ARGO --> HELM["Helm chart<br/>desired Kubernetes state"]
+    end
+
+    subgraph LOCAL["Local validation"]
+      MINI["Minikube cluster"] --> HELMLOCAL["Helm release"]
+      HELMLOCAL --> APPLOCAL["Flask application Pods"]
+    end
+
+    subgraph AWS["AWS EKS demonstration environment"]
+      TF["Terraform"] --> VPC["VPC / subnets / routing"]
+      TF --> EKS["Amazon EKS cluster"]
+      TF --> STATE["Amazon S3<br/>Terraform remote state"]
+      EKS --> ALBCTRL["AWS Load Balancer Controller"]
+      ALBCTRL --> ALB["Application Load Balancer<br/>HTTP listener"]
+      HELM --> DEPLOY["Kubernetes Deployment"]
+      DEPLOY --> PODS["Flask Pods<br/>Gunicorn :5000"]
+      ALB --> SVC["Kubernetes Service"]
+      SVC --> PODS
+      HPA["Horizontal Pod Autoscaler<br/>CPU target 60%, 2–6 replicas"] --> DEPLOY
+      SECRET["Kubernetes Secret<br/>created outside Helm values"] --> PODS
+      NETPOL["NetworkPolicy"] --> PODS
+      PROM["Prometheus"] --> PODS
+      GRAF["Grafana dashboards"] --> PROM
+      SM["ServiceMonitor"] --> PROM
+    end
+
+    HELM --> HELMLOCAL
+    HELM --> DEPLOY
+    VERIFY -. "image publication verified" .-> VALUES
+    PODS --> METRICS["/metrics/prometheus"]
+    METRICS --> PROM
 ```
 
-Once unsealed this will produce a secret equivalent to this:
+### Architecture notes
 
-```yaml
-apiVersion: v1
-kind: Secret
-metadata:
-  name: mysecret
-  namespace: mynamespace
-data:
-  foo: YmFy  # <- base64 encoded "bar"
+- **CI is the quality gate:** the workflow runs Python lint/format checks and Flask endpoint tests before the security and image-delivery stages.
+- **Image publication:** the reusable Docker workflow builds a Linux AMD64 image and publishes to GHCR and, when configured, Amazon ECR. AWS authentication uses GitHub's OIDC identity to assume a scoped IAM role rather than storing long-lived AWS access keys in GitHub secrets.
+- **GitOps:** Argo CD observes the repository and reconciles the Helm chart into Kubernetes. The current `gitops-update` job updates `helm/devops-platform/values-dev.yaml` on a push to `main`; the EKS demo configuration is represented separately by `values-eks.yaml`.
+- **Runtime:** the Flask application runs in Kubernetes Pods behind a Service. The EKS demo used an AWS Application Load Balancer through the AWS Load Balancer Controller.
+- **Observability and scaling:** a ServiceMonitor exposes application metrics to Prometheus; Grafana visualizes the metrics; the HPA uses CPU utilization to adjust replicas.
+- **Infrastructure state:** Terraform remote state is stored in an S3 backend. The EKS demo stack was destroyed after validation to avoid ongoing cloud charges; see [Cost and lifecycle note](#cost-and-lifecycle-note).
+
+## End-to-end workflow
+
+1. A developer pushes code or opens a pull request against `main`.
+2. GitHub Actions checks out the repository, installs Python dependencies, runs `flake8`, checks formatting with Black and tests the Flask endpoints.
+3. The security job scans repository history with Gitleaks and the filesystem with Trivy (CRITICAL severity, ignoring unfixed findings).
+4. The reusable Docker workflow builds the image with Buildx. For push events it authenticates to GHCR and uses GitHub OIDC to assume the configured AWS role for ECR publishing.
+5. The verification job pulls the SHA-tagged image, starts a container and checks `/health`.
+6. On a push to `main`, the GitOps update job changes the image tag in `helm/devops-platform/values-dev.yaml` and pushes the change. Argo CD can then reconcile the updated development Helm release.
+7. The EKS demonstration used a separate EKS Helm values file and Argo CD application configuration. The EKS image/configuration update should be treated as a separately controlled deployment step, not as an automatic result of the `values-dev.yaml` update job.
+
+## Technology stack
+
+| Area | Technologies | Purpose |
+|---|---|---|
+| Application | Python 3.12, Flask 3.1, Werkzeug | Web application and API endpoints |
+| Production serving | Gunicorn | WSGI application server |
+| Containerization | Docker, multi-stage Dockerfile | Reproducible, smaller runtime image; non-root execution |
+| Local orchestration | Kubernetes, Minikube | Local cluster development and validation |
+| Packaging | Helm | Parameterized Kubernetes manifests and environment-specific values |
+| GitOps | Argo CD | Continuous reconciliation from Git |
+| CI/CD | GitHub Actions, reusable workflow, Docker Buildx | Tests, security checks, image build and publishing |
+| Image registries | GHCR, Amazon ECR | Versioned container image storage |
+| Infrastructure as code | Terraform | AWS infrastructure and IAM/ECR provisioning |
+| AWS | EKS, VPC, IAM, S3, ECR, Application Load Balancer | Managed Kubernetes and cloud networking |
+| Ingress | AWS Load Balancer Controller | ALB provisioning from Kubernetes Ingress |
+| Metrics | Prometheus, prometheus-flask-exporter, ServiceMonitor | Application and cluster metrics collection |
+| Dashboards | Grafana | Operational dashboards and visualization |
+| Security | Gitleaks, Trivy, Kubernetes SecurityContext, NetworkPolicy | Secret scanning, vulnerability scanning and workload/network hardening |
+| Secret workflow | Kubernetes Secret / Sealed Secrets tooling | Keep runtime secret values out of Helm values and ordinary source configuration |
+
+## Repository structure
+
+The following is a focused map of the repository's main implementation areas.
+
+```text
+production-grade-devops-platform/
+├── .github/
+│   └── workflows/
+│       ├── ci-cd.yml
+│       └── reusable-docker-build.yml
+├── argocd/                   # Argo CD Application and GitOps configuration
+├── charts/
+│   └── templates/            # Kubernetes chart/template assets
+├── docs/
+│   ├── evidence/             # Captured CLI evidence and resource snapshots
+│   └── screenshots/          # Phase-by-phase implementation screenshots
+├── eks-addons/               # EKS add-on configuration
+├── helm/
+│   └── devops-platform/      # Application Helm chart and values files
+├── k8s/                      # Kubernetes manifests and supporting resources
+├── loadtest/                 # Load-test assets
+├── monitoring/               # Prometheus/Grafana and monitoring values/rules
+├── src/
+│   ├── config.py             # Environment-specific Flask configuration
+│   ├── routes/               # Flask route blueprints
+│   ├── static/               # Static frontend assets
+│   └── templates/             # Application templates
+├── terraform/
+│   ├── bootstrap/             # Remote-state/bootstrap resources
+│   ├── ci/                    # ECR and GitHub OIDC IAM resources
+│   └── eks-demo/              # EKS demonstration infrastructure
+├── tests/                     # Application tests
+├── app.py                     # Flask application factory entry point
+├── Dockerfile                 # Multi-stage, non-root container image
+├── requirements.txt           # Python dependencies
+└── README.md
 ```
 
-This normal [kubernetes secret](https://kubernetes.io/docs/concepts/configuration/secret/) will appear in the cluster
-after a few seconds you can use it as you would use any secret that you would have created directly (e.g. reference it from a `Pod`).
+## Implementation phases and proof of work
 
-Jump to the [Installation](#installation) section to get up and running.
+The screenshots below are the supplied project evidence files. Each image is linked using its exact filename under `docs/screenshots/`. Expand a phase to view its evidence. The captions describe the visible activity at a practical level; the screenshots are historical captures, not claims that the associated cloud resources are still running.
 
-The [Usage](#usage) section explores in more detail how you craft `SealedSecret` resources.
+### Phase 1 — Flask application and Docker foundation
 
-### SealedSecrets as templates for secrets
+Initial Flask application, repository bootstrap, Docker image build, container execution and browser-based smoke checks.
 
-The previous example only focused on the encrypted secret items themselves, but the relationship between a `SealedSecret` custom resource and the `Secret` it unseals into is similar in many ways (but not in all of them) to the familiar `Deployment` vs `Pod`.
+<details>
+<summary>View 9 screenshot(s) for this phase</summary>
 
-In particular, the annotations and labels of a `SealedSecret` resource are not the same as the annotations of the `Secret` that gets generated out of it.
 
-To capture this distinction, the `SealedSecret` object has a `template` section which encodes all the fields you want the controller to put in the unsealed `Secret`.
+**Evidence 001 — VS Code view of the initial Flask application source.**
 
-The [Sprig function library](https://masterminds.github.io/sprig/) is available in addition to the default Go Text Template functions.
+![VS Code view of the initial Flask application source.](docs/screenshots/Screenshot%202026-06-24%20170406.png)
 
-The `metadata` block is copied as is (the `ownerReference` field will be updated [unless disabled](#seal-secret-which-can-skip-set-owner-references)).
 
-Other secret fields are handled individually. The `type` and `immutable` fields are copied, and the `data` field can be used to [template complex values](docs/examples/config-template) on the `Secret`. All other fields are currently ignored.
+**Evidence 002 — GitHub repository view showing the first application files.**
 
-```yaml
-apiVersion: bitnami.com/v1alpha1
-kind: SealedSecret
-metadata:
-  name: mysecret
-  namespace: mynamespace
-  annotations:
-    "kubectl.kubernetes.io/last-applied-configuration": ....
-spec:
-  encryptedData:
-    .dockerconfigjson: AgBy3i4OJSWK+PiTySYZZA9rO43cGDEq.....
-  template:
-    type: kubernetes.io/dockerconfigjson
-    immutable: true
-    # this is an example of labels and annotations that will be added to the output secret
-    metadata:
-      labels:
-        "jenkins.io/credentials-type": usernamePassword
-      annotations:
-        "jenkins.io/credentials-description": credentials from Kubernetes
-```
+![GitHub repository view showing the first application files.](docs/screenshots/Screenshot%202026-06-24%20170855.png)
 
-The controller would unseal that into something like:
 
-```yaml
-apiVersion: v1
-kind: Secret
-metadata:
-  name: mysecret
-  namespace: mynamespace
-  labels:
-    "jenkins.io/credentials-type": usernamePassword
-  annotations:
-    "jenkins.io/credentials-description": credentials from Kubernetes
-  ownerReferences:
-  - apiVersion: bitnami.com/v1alpha1
-    controller: true
-    kind: SealedSecret
-    name: mysecret
-    uid: 5caff6a0-c9ac-11e9-881e-42010aac003e
-type: kubernetes.io/dockerconfigjson
-immutable: true
-data:
-  .dockerconfigjson: ewogICJjcmVk...
-```
+**Evidence 003 — Docker Desktop showing the locally built/running application containers.**
 
-As you can see, the generated `Secret` resource is a "dependent object" of the `SealedSecret` and as such
-it will be updated and deleted whenever the `SealedSecret` object gets updated or deleted.
+![Docker Desktop showing the locally built/running application containers.](docs/screenshots/Screenshot%202026-06-24%20172102.png)
 
-### Public key / Certificate
 
-The key certificate (public key portion) is used for sealing secrets,
-and needs to be available wherever `kubeseal` is going to be
-used. The certificate is not secret information, although you need to
-ensure you are using the correct one.
+**Evidence 004 — Browser smoke test reaching the application through the host network.**
 
-`kubeseal` will fetch the certificate from the controller at runtime
-(requires secure access to the Kubernetes API server), which is
-convenient for interactive use, but it's known to be brittle when users
-have clusters with special configurations such as [private GKE clusters](docs/GKE.md#private-gke-clusters) that have
-firewalls between control plane and nodes.
+![Browser smoke test reaching the application through the host network.](docs/screenshots/Screenshot%202026-06-24%20172718.png)
 
-An alternative workflow
-is to store the certificate somewhere (e.g. local disk) with
-`kubeseal --fetch-cert >mycert.pem`,
-and use it offline with `kubeseal --cert mycert.pem`.
-The certificate is also printed to the controller log on startup.
 
-Since v0.9.x certificates get automatically renewed every 30 days. It's good practice that you and your team
-update your offline certificate periodically. To help you with that, since v0.9.2 `kubeseal` accepts URLs too. You can set up your internal automation to publish certificates somewhere you trust.
+**Evidence 005 — Docker image build output, including dependency installation and image creation.**
+
+![Docker image build output, including dependency installation and image creation.](docs/screenshots/Screenshot%202026-06-24%20174236.png)
+
+
+**Evidence 006 — Localhost browser smoke test showing the Flask application response.**
+
+![Localhost browser smoke test showing the Flask application response.](docs/screenshots/Screenshot%202026-06-24%20174555.png)
+
+
+**Evidence 007 — Flask development server startup and request log output.**
+
+![Flask development server startup and request log output.](docs/screenshots/Screenshot%202026-06-24%20174753.png)
+
+
+**Evidence 008 — Docker CLI container listing/status check.**
+
+![Docker CLI container listing/status check.](docs/screenshots/Screenshot%202026-06-24%20174854.png)
+
+
+**Evidence 009 — GitHub source view of the Flask application implementation.**
+
+![GitHub source view of the Flask application implementation.](docs/screenshots/Screenshot%202026-06-24%20175049.png)
+
+
+</details>
+
+### Phase 2 — Kubernetes fundamentals with Minikube
+
+Local Kubernetes environment setup, cluster startup, Deployment/Pod/Service inspection and application access through a local NodePort.
+
+<details>
+<summary>View 7 screenshot(s) for this phase</summary>
+
+
+**Evidence 010 — Local Windows terminal verification of Kubernetes tooling versions.**
+
+![Local Windows terminal verification of Kubernetes tooling versions.](docs/screenshots/Screenshot%202026-06-26%20105314.png)
+
+
+**Evidence 011 — Minikube cluster startup and local Kubernetes node initialization.**
+
+![Minikube cluster startup and local Kubernetes node initialization.](docs/screenshots/Screenshot%202026-06-26%20113244.png)
+
+
+**Evidence 012 — Kubernetes deployment/pod state after the first application rollout.**
+
+![Kubernetes deployment/pod state after the first application rollout.](docs/screenshots/Screenshot%202026-06-26%20123709.png)
+
+
+**Evidence 013 — Application response through a local forwarded/NodePort browser endpoint.**
+
+![Application response through a local forwarded/NodePort browser endpoint.](docs/screenshots/Screenshot%202026-06-26%20124807.png)
+
+
+**Evidence 014 — Kubernetes Service and Deployment inspection, including exposed application port.**
+
+![Kubernetes Service and Deployment inspection, including exposed application port.](docs/screenshots/Screenshot%202026-06-26%20124905.png)
+
+
+**Evidence 015 — Second local application access check through a forwarded browser port.**
+
+![Second local application access check through a forwarded browser port.](docs/screenshots/Screenshot%202026-06-26%20130958.png)
+
+
+**Evidence 016 — Application request logs confirming successful HTTP requests.**
+
+![Application request logs confirming successful HTTP requests.](docs/screenshots/Screenshot%202026-06-26%20135132.png)
+
+
+</details>
+
+### Phase 3 — Helm chart packaging and configuration
+
+Helm chart creation, templates and values inspection, lint/render/install workflow, and validation of Kubernetes resources generated from the chart.
+
+<details>
+<summary>View 27 screenshot(s) for this phase</summary>
+
+
+**Evidence 017 — Docker Desktop/Minikube runtime state during Kubernetes setup.**
+
+![Docker Desktop/Minikube runtime state during Kubernetes setup.](docs/screenshots/Screenshot%202026-06-28%20122327.png)
+
+
+**Evidence 018 — Project landing page rendered in the browser.**
+
+![Project landing page rendered in the browser.](docs/screenshots/Screenshot%202026-06-28%20123901.png)
+
+
+**Evidence 019 — Helm chart metadata and chart packaging inspection.**
+
+![Helm chart metadata and chart packaging inspection.](docs/screenshots/Screenshot%202026-06-28%20125053.png)
+
+
+**Evidence 020 — Helm chart command output during chart validation.**
+
+![Helm chart command output during chart validation.](docs/screenshots/Screenshot%202026-06-28%20125139.png)
+
+
+**Evidence 021 — Helm chart source/configuration inspection.**
+
+![Helm chart source/configuration inspection.](docs/screenshots/Screenshot%202026-06-28%20125241.png)
+
+
+**Evidence 022 — Helm chart repository/image inventory in Docker Desktop.**
+
+![Helm chart repository/image inventory in Docker Desktop.](docs/screenshots/Screenshot%202026-06-28%20151234.png)
+
+
+**Evidence 023 — Helm chart source tree and template implementation.**
+
+![Helm chart source tree and template implementation.](docs/screenshots/Screenshot%202026-06-28%20151610.png)
+
+
+**Evidence 024 — Helm chart template rendering and resource configuration review.**
+
+![Helm chart template rendering and resource configuration review.](docs/screenshots/Screenshot%202026-06-28%20181833.png)
+
+
+**Evidence 025 — Helm chart lint/install command output.**
+
+![Helm chart lint/install command output.](docs/screenshots/Screenshot%202026-06-28%20181852.png)
+
+
+**Evidence 026 — Rendered Kubernetes resource definitions from the Helm chart.**
+
+![Rendered Kubernetes resource definitions from the Helm chart.](docs/screenshots/Screenshot%202026-06-28%20183931.png)
+
+
+**Evidence 027 — Helm values/configuration validation.**
+
+![Helm values/configuration validation.](docs/screenshots/Screenshot%202026-06-28%20191922.png)
+
+
+**Evidence 028 — Helm template output showing Kubernetes resource metadata.**
+
+![Helm template output showing Kubernetes resource metadata.](docs/screenshots/Screenshot%202026-06-28%20191943.png)
+
+
+**Evidence 029 — Deployment/Service template configuration review.**
+
+![Deployment/Service template configuration review.](docs/screenshots/Screenshot%202026-06-28%20194543.png)
+
+
+**Evidence 030 — Helm values and generated Kubernetes configuration inspection.**
+
+![Helm values and generated Kubernetes configuration inspection.](docs/screenshots/Screenshot%202026-06-28%20201446.png)
+
+
+**Evidence 031 — Ingress and service template configuration review.**
+
+![Ingress and service template configuration review.](docs/screenshots/Screenshot%202026-06-28%20215053.png)
+
+
+**Evidence 032 — Helm selector/port and workload template inspection.**
+
+![Helm selector/port and workload template inspection.](docs/screenshots/Screenshot%202026-06-28%20224337.png)
+
+
+**Evidence 033 — Git history showing incremental Helm chart implementation.**
+
+![Git history showing incremental Helm chart implementation.](docs/screenshots/Screenshot%202026-06-28%20231200.png)
+
+
+**Evidence 034 — Rendered chart resources and configuration review.**
+
+![Rendered chart resources and configuration review.](docs/screenshots/Screenshot%202026-06-28%20234503.png)
+
+
+**Evidence 035 — ConfigMap template and application environment configuration.**
+
+![ConfigMap template and application environment configuration.](docs/screenshots/Screenshot%202026-06-28%20235444.png)
+
+
+**Evidence 036 — Kubernetes Secret template structure (secret values should never be committed in plaintext).**
+
+![Kubernetes Secret template structure (secret values should never be committed in plaintext).](docs/screenshots/Screenshot%202026-06-29%20000037.png)
+
+
+**Evidence 037 — ServiceAccount template and workload identity configuration.**
+
+![ServiceAccount template and workload identity configuration.](docs/screenshots/Screenshot%202026-06-29%20002650.png)
+
+
+**Evidence 038 — GitHub commit history documenting Helm chart milestones.**
+
+![GitHub commit history documenting Helm chart milestones.](docs/screenshots/Screenshot%202026-06-29%20135013.png)
+
+
+**Evidence 039 — Rendered chart resources, including workload configuration.**
+
+![Rendered chart resources, including workload configuration.](docs/screenshots/Screenshot%202026-06-29%20140112.png)
+
+
+**Evidence 040 — Helm installation/deployment output and application release validation.**
+
+![Helm installation/deployment output and application release validation.](docs/screenshots/Screenshot%202026-06-29%20140528.png)
+
+
+**Evidence 041 — Application Deployment/Pod status after Helm installation.**
+
+![Application Deployment/Pod status after Helm installation.](docs/screenshots/Screenshot%202026-06-29%20151418.png)
+
+
+**Evidence 042 — Application health endpoint response from the deployed workload.**
+
+![Application health endpoint response from the deployed workload.](docs/screenshots/Screenshot%202026-06-29%20151658.png)
+
+
+**Evidence 043 — Kubernetes application deployment and endpoint verification.**
+
+![Kubernetes application deployment and endpoint verification.](docs/screenshots/Screenshot%202026-06-29%20152017.png)
+
+
+</details>
+
+### Phase 4 — Argo CD GitOps and secret handling
+
+Argo CD installation and UI, Application resources, repository connection, automated sync/health checks, GitOps demo endpoint, and Sealed Secrets workflow.
+
+<details>
+<summary>View 52 screenshot(s) for this phase</summary>
+
+
+**Evidence 044 — Argo CD components running in the local Kubernetes cluster.**
+
+![Argo CD components running in the local Kubernetes cluster.](docs/screenshots/Screenshot%202026-07-02%20111149.png)
+
+
+**Evidence 045 — Argo CD namespace resources and controller status.**
+
+![Argo CD namespace resources and controller status.](docs/screenshots/Screenshot%202026-07-02%20112740.png)
+
+
+**Evidence 046 — Argo CD CLI/repository access setup.**
+
+![Argo CD CLI/repository access setup.](docs/screenshots/Screenshot%202026-07-02%20125140.png)
+
+
+**Evidence 047 — Argo CD initial web UI/login screen.**
+
+![Argo CD initial web UI/login screen.](docs/screenshots/Screenshot%202026-07-02%20130001.png)
+
+
+**Evidence 048 — Argo CD Applications page before application registration.**
+
+![Argo CD Applications page before application registration.](docs/screenshots/Screenshot%202026-07-02%20130052.png)
+
+
+**Evidence 049 — Argo CD CLI installation/context setup evidence.**
+
+![Argo CD CLI installation/context setup evidence.](docs/screenshots/Screenshot%202026-07-02%20163743.png)
+
+
+**Evidence 050 — GitHub personal access token settings used for repository integration; token values must remain private.**
+
+![GitHub personal access token settings used for repository integration; token values must remain private.](docs/screenshots/Screenshot%202026-07-02%20221909.png)
+
+
+**Evidence 051 — Argo CD repository connection/status check.**
+
+![Argo CD repository connection/status check.](docs/screenshots/Screenshot%202026-07-02%20225637.png)
+
+
+**Evidence 052 — Argo CD Applications list after initial setup.**
+
+![Argo CD Applications list after initial setup.](docs/screenshots/Screenshot%202026-07-02%20225841.png)
+
+
+**Evidence 053 — Application status and local Kubernetes resource inspection.**
+
+![Application status and local Kubernetes resource inspection.](docs/screenshots/Screenshot%202026-07-03%20115710.png)
+
+
+**Evidence 054 — Application health endpoint response showing runtime metadata.**
+
+![Application health endpoint response showing runtime metadata.](docs/screenshots/Screenshot%202026-07-03%20115830.png)
+
+
+**Evidence 055 — Deployment/pod rollout and resource status verification.**
+
+![Deployment/pod rollout and resource status verification.](docs/screenshots/Screenshot%202026-07-03%20121858.png)
+
+
+**Evidence 056 — Argo CD application resource graph and health overview.**
+
+![Argo CD application resource graph and health overview.](docs/screenshots/Screenshot%202026-07-03%20122231.png)
+
+
+**Evidence 057 — Argo CD Applications view showing development and production application entries.**
+
+![Argo CD Applications view showing development and production application entries.](docs/screenshots/Screenshot%202026-07-03%20133333.png)
+
+
+**Evidence 058 — Git commit/push used to update the GitOps-managed configuration.**
+
+![Git commit/push used to update the GitOps-managed configuration.](docs/screenshots/Screenshot%202026-07-03%20135930.png)
+
+
+**Evidence 059 — Argo CD application sync status after repository changes.**
+
+![Argo CD application sync status after repository changes.](docs/screenshots/Screenshot%202026-07-03%20142426.png)
+
+
+**Evidence 060 — GitOps demo endpoint response describing the commit-to-deployment workflow.**
+
+![GitOps demo endpoint response describing the commit-to-deployment workflow.](docs/screenshots/Screenshot%202026-07-03%20143435.png)
+
+
+**Evidence 061 — Development namespace pod rollout after a GitOps change.**
+
+![Development namespace pod rollout after a GitOps change.](docs/screenshots/Screenshot%202026-07-03%20144526.png)
+
+
+**Evidence 062 — Argo CD Application manifest/configuration review.**
+
+![Argo CD Application manifest/configuration review.](docs/screenshots/Screenshot%202026-07-03%20145057.png)
+
+
+**Evidence 063 — Argo CD revision/history evidence for successive GitOps updates.**
+
+![Argo CD revision/history evidence for successive GitOps updates.](docs/screenshots/Screenshot%202026-07-03%20145141.png)
+
+
+**Evidence 064 — Kubernetes resource quota configuration for the production namespace.**
+
+![Kubernetes resource quota configuration for the production namespace.](docs/screenshots/Screenshot%202026-07-03%20190156.png)
+
+
+**Evidence 065 — GitOps/Helm configuration update and validation.**
+
+![GitOps/Helm configuration update and validation.](docs/screenshots/Screenshot%202026-07-03%20191309.png)
+
+
+**Evidence 066 — Environment-specific configuration output for development and production.**
+
+![Environment-specific configuration output for development and production.](docs/screenshots/Screenshot%202026-07-03%20193205.png)
+
+
+**Evidence 067 — Kubernetes resource inventory during environment comparison.**
+
+![Kubernetes resource inventory during environment comparison.](docs/screenshots/Screenshot%202026-07-03%20194428.png)
+
+
+**Evidence 068 — Pod/resource state across development and production namespaces.**
+
+![Pod/resource state across development and production namespaces.](docs/screenshots/Screenshot%202026-07-03%20195201.png)
+
+
+**Evidence 069 — Argo CD application health view after synchronization.**
+
+![Argo CD application health view after synchronization.](docs/screenshots/Screenshot%202026-07-03%20195854.png)
+
+
+**Evidence 070 — Argo CD application details and source/destination configuration.**
+
+![Argo CD application details and source/destination configuration.](docs/screenshots/Screenshot%202026-07-03%20235129.png)
+
+
+**Evidence 071 — Argo CD project configuration and repository permissions.**
+
+![Argo CD project configuration and repository permissions.](docs/screenshots/Screenshot%202026-07-03%20235454.png)
+
+
+**Evidence 072 — Helm/Argo CD generated resource configuration review.**
+
+![Helm/Argo CD generated resource configuration review.](docs/screenshots/Screenshot%202026-07-03%20235634.png)
+
+
+**Evidence 073 — Argo CD application history and sync event evidence.**
+
+![Argo CD application history and sync event evidence.](docs/screenshots/Screenshot%202026-07-03%20235710.png)
+
+
+**Evidence 074 — Argo CD resource tree showing managed Kubernetes resources.**
+
+![Argo CD resource tree showing managed Kubernetes resources.](docs/screenshots/Screenshot%202026-07-03%20235833.png)
+
+
+**Evidence 075 — Sealed Secrets controller and encrypted-secret workflow configuration.**
+
+![Sealed Secrets controller and encrypted-secret workflow configuration.](docs/screenshots/Screenshot%202026-07-03%20235951.png)
+
+
+**Evidence 076 — Sealed Secrets controller pod running in the development cluster.**
+
+![Sealed Secrets controller pod running in the development cluster.](docs/screenshots/Screenshot%202026-07-04%20002345.png)
+
+
+**Evidence 077 — kubeseal public certificate / encrypted secret material handling; no private key is shown as a deployment credential.**
+
+![kubeseal public certificate / encrypted secret material handling; no private key is shown as a deployment credential.](docs/screenshots/Screenshot%202026-07-04%20002740.png)
+
+
+**Evidence 078 — Applying a SealedSecret manifest and verifying the generated Kubernetes Secret.**
+
+![Applying a SealedSecret manifest and verifying the generated Kubernetes Secret.](docs/screenshots/Screenshot%202026-07-04%20003327.png)
+
+
+**Evidence 079 — Application pod status after the secret integration.**
+
+![Application pod status after the secret integration.](docs/screenshots/Screenshot%202026-07-04%20011604.png)
+
+
+**Evidence 080 — GitOps application details after secret-related configuration changes.**
+
+![GitOps application details after secret-related configuration changes.](docs/screenshots/Screenshot%202026-07-04%20140800.png)
+
+
+**Evidence 081 — Argo CD source and destination configuration for the managed application.**
+
+![Argo CD source and destination configuration for the managed application.](docs/screenshots/Screenshot%202026-07-04%20143424.png)
+
+
+**Evidence 082 — GitOps demo endpoint error encountered during troubleshooting.**
+
+![GitOps demo endpoint error encountered during troubleshooting.](docs/screenshots/Screenshot%202026-07-04%20224628.png)
+
+
+**Evidence 083 — GitOps demo endpoint response and HTTP headers after the fix.**
+
+![GitOps demo endpoint response and HTTP headers after the fix.](docs/screenshots/Screenshot%202026-07-04%20232809.png)
+
+
+**Evidence 084 — Argo CD application details and synchronization state.**
+
+![Argo CD application details and synchronization state.](docs/screenshots/Screenshot%202026-07-05%20000133.png)
+
+
+**Evidence 085 — Argo CD application comparison/health state.**
+
+![Argo CD application comparison/health state.](docs/screenshots/Screenshot%202026-07-05%20133959.png)
+
+
+**Evidence 086 — Argo CD application history and deployed revision.**
+
+![Argo CD application history and deployed revision.](docs/screenshots/Screenshot%202026-07-05%20142330.png)
+
+
+**Evidence 087 — Kubernetes resources and rollout status after a GitOps sync.**
+
+![Kubernetes resources and rollout status after a GitOps sync.](docs/screenshots/Screenshot%202026-07-05%20143120.png)
+
+
+**Evidence 088 — Argo CD application resource status and health checks.**
+
+![Argo CD application resource status and health checks.](docs/screenshots/Screenshot%202026-07-05%20143249.png)
+
+
+**Evidence 089 — Argo CD resource tree and child resources.**
+
+![Argo CD resource tree and child resources.](docs/screenshots/Screenshot%202026-07-05%20151146.png)
+
+
+**Evidence 090 — Argo CD project/application configuration evidence.**
+
+![Argo CD project/application configuration evidence.](docs/screenshots/Screenshot%202026-07-05%20151319.png)
+
+
+**Evidence 091 — Argo CD application resource graph and health status.**
+
+![Argo CD application resource graph and health status.](docs/screenshots/Screenshot%202026-07-05%20151749.png)
+
+
+**Evidence 092 — Argo CD application details after the repository update.**
+
+![Argo CD application details after the repository update.](docs/screenshots/Screenshot%202026-07-05%20151859.png)
+
+
+**Evidence 093 — Terminal evidence of GitOps configuration/revision work.**
+
+![Terminal evidence of GitOps configuration/revision work.](docs/screenshots/Screenshot%202026-07-10%20203722.png)
+
+
+**Evidence 094 — Terminal evidence of repository synchronization and deployment workflow.**
+
+![Terminal evidence of repository synchronization and deployment workflow.](docs/screenshots/Screenshot%202026-07-10%20204641.png)
+
+
+**Evidence 095 — Terminal evidence of the final GitOps configuration checks.**
+
+![Terminal evidence of the final GitOps configuration checks.](docs/screenshots/Screenshot%202026-07-10%20205923.png)
+
+
+</details>
+
+### Phase 5 — GitHub Actions CI/CD and image delivery
+
+GitHub Actions pipeline runs, Docker build/push summaries, image verification and workflow execution evidence.
+
+<details>
+<summary>View 8 screenshot(s) for this phase</summary>
+
+
+**Evidence 096 — GitHub Actions CI workflow run with successful job stages.**
+
+![GitHub Actions CI workflow run with successful job stages.](docs/screenshots/Screenshot%202026-10-11%20172522.png)
+
+
+**Evidence 097 — GitHub Actions workflow execution details for the CI/CD pipeline.**
+
+![GitHub Actions workflow execution details for the CI/CD pipeline.](docs/screenshots/Screenshot%202026-10-11%20221514.png)
+
+
+**Evidence 098 — Docker build and push summary showing the produced image metadata.**
+
+![Docker build and push summary showing the produced image metadata.](docs/screenshots/Screenshot%202026-10-11%20222307.png)
+
+
+**Evidence 099 — Image verification job and workflow log evidence.**
+
+![Image verification job and workflow log evidence.](docs/screenshots/Screenshot%202026-10-11%20222418.png)
+
+
+**Evidence 100 — GitHub Actions pipeline run showing the multi-job workflow progression.**
+
+![GitHub Actions pipeline run showing the multi-job workflow progression.](docs/screenshots/Screenshot%202026-10-11%20231204.png)
+
+
+**Evidence 101 — GitHub Actions run list showing repeated pipeline executions.**
+
+![GitHub Actions run list showing repeated pipeline executions.](docs/screenshots/Screenshot%202026-10-13%20235807.png)
+
+
+**Evidence 102 — Git commit history showing automated GitOps image-tag updates.**
+
+![Git commit history showing automated GitOps image-tag updates.](docs/screenshots/Screenshot%202026-10-14%20000430.png)
+
+
+**Evidence 103 — GitHub Actions commit/change evidence for the pipeline implementation.**
+
+![GitHub Actions commit/change evidence for the pipeline implementation.](docs/screenshots/Screenshot%202026-10-14%20000919.png)
+
+
+</details>
+
+### Phase 6 — Prometheus and Grafana observability
+
+Prometheus installation and target discovery, ServiceMonitor configuration, Grafana dashboards and application/service metrics.
+
+<details>
+<summary>View 12 screenshot(s) for this phase</summary>
+
+
+**Evidence 104 — Argo CD application state during the observability integration phase.**
+
+![Argo CD application state during the observability integration phase.](docs/screenshots/Screenshot%202026-10-22%20194004.png)
+
+
+**Evidence 105 — Argo CD sync/health status during monitoring configuration changes.**
+
+![Argo CD sync/health status during monitoring configuration changes.](docs/screenshots/Screenshot%202026-10-23%20183015.png)
+
+
+**Evidence 106 — GitHub Actions workflow run for the monitoring-related project revision.**
+
+![GitHub Actions workflow run for the monitoring-related project revision.](docs/screenshots/Screenshot%202026-10-26%20213227.png)
+
+
+**Evidence 107 — Kubernetes monitoring namespace pods and service endpoints.**
+
+![Kubernetes monitoring namespace pods and service endpoints.](docs/screenshots/Screenshot%202026-10-27%20150922.png)
+
+
+**Evidence 108 — Grafana dashboard catalogue showing installed dashboards.**
+
+![Grafana dashboard catalogue showing installed dashboards.](docs/screenshots/Screenshot%202026-10-27%20151101.png)
+
+
+**Evidence 109 — Prometheus Targets page showing discovered scrape targets and health.**
+
+![Prometheus Targets page showing discovered scrape targets and health.](docs/screenshots/Screenshot%202026-10-27%20155518.png)
+
+
+**Evidence 110 — Grafana dashboard panels for application and cluster metrics.**
+
+![Grafana dashboard panels for application and cluster metrics.](docs/screenshots/Screenshot%202026-10-27%20203722.png)
+
+
+**Evidence 111 — Prometheus ServiceMonitor configuration and scrape settings.**
+
+![Prometheus ServiceMonitor configuration and scrape settings.](docs/screenshots/Screenshot%202026-10-27%20221147.png)
+
+
+**Evidence 112 — Prometheus query/UI validation for application metrics.**
+
+![Prometheus query/UI validation for application metrics.](docs/screenshots/Screenshot%202026-10-27%20221633.png)
+
+
+**Evidence 113 — Prometheus target/metric inspection during observability validation.**
+
+![Prometheus target/metric inspection during observability validation.](docs/screenshots/Screenshot%202026-10-27%20221956.png)
+
+
+**Evidence 114 — Prometheus/Grafana configuration review from the project repository.**
+
+![Prometheus/Grafana configuration review from the project repository.](docs/screenshots/Screenshot%202026-10-28%20110140.png)
+
+
+**Evidence 115 — Grafana dashboard showing time-series application and workload metrics.**
+
+![Grafana dashboard showing time-series application and workload metrics.](docs/screenshots/Screenshot%202026-10-29%20181834.png)
+
+
+</details>
+
+### Phase 7 — Alert rules, HPA and load validation
+
+Prometheus alert-rule configuration and UI, Kubernetes resource/HPA observations, workload/load-test activity and scaling evidence.
+
+<details>
+<summary>View 14 screenshot(s) for this phase</summary>
+
+
+**Evidence 116 — Prometheus alert-rule configuration in the repository.**
+
+![Prometheus alert-rule configuration in the repository.](docs/screenshots/Screenshot%202026-11-05%20134442.png)
+
+
+**Evidence 117 — Prometheus alerting rules and alert state in the UI.**
+
+![Prometheus alerting rules and alert state in the UI.](docs/screenshots/Screenshot%202026-11-05%20134527.png)
+
+
+**Evidence 118 — Alertmanager UI showing configured alert routing state.**
+
+![Alertmanager UI showing configured alert routing state.](docs/screenshots/Screenshot%202026-11-06%20000055.png)
+
+
+**Evidence 119 — Alertmanager notification/receiver configuration review.**
+
+![Alertmanager notification/receiver configuration review.](docs/screenshots/Screenshot%202026-11-06%20000328.png)
+
+
+**Evidence 120 — Prometheus alert rule state and monitoring configuration validation.**
+
+![Prometheus alert rule state and monitoring configuration validation.](docs/screenshots/Screenshot%202026-11-06%20001156.png)
+
+
+**Evidence 121 — Kubernetes pod resource usage output during HPA/load testing.**
+
+![Kubernetes pod resource usage output during HPA/load testing.](docs/screenshots/Screenshot%202026-11-06%20112911.png)
+
+
+**Evidence 122 — HPA/deployment configuration review showing autoscaling parameters.**
+
+![HPA/deployment configuration review showing autoscaling parameters.](docs/screenshots/Screenshot%202026-11-06%20123931.png)
+
+
+**Evidence 123 — HPA and Kubernetes resource configuration validation.**
+
+![HPA and Kubernetes resource configuration validation.](docs/screenshots/Screenshot%202026-11-06%20124201.png)
+
+
+**Evidence 124 — Grafana dashboard showing request/error/latency or workload metrics during load activity.**
+
+![Grafana dashboard showing request/error/latency or workload metrics during load activity.](docs/screenshots/Screenshot%202026-11-10%20185643.png)
+
+
+**Evidence 125 — Deployment and HPA status showing replica count and scaling observations.**
+
+![Deployment and HPA status showing replica count and scaling observations.](docs/screenshots/Screenshot%202026-11-10%20192029.png)
+
+
+**Evidence 126 — Grafana/cluster UI evidence during load testing and autoscaling validation.**
+
+![Grafana/cluster UI evidence during load testing and autoscaling validation.](docs/screenshots/Screenshot%202026-11-10%20233814.png)
+
+
+**Evidence 127 — Terminal output from a security/configuration validation step.**
+
+![Terminal output from a security/configuration validation step.](docs/screenshots/Screenshot%202026-11-11%20151842.png)
+
+
+**Evidence 128 — Terminal output showing security/configuration validation results.**
+
+![Terminal output showing security/configuration validation results.](docs/screenshots/Screenshot%202026-11-11%20224511.png)
+
+
+**Evidence 129 — Terminal output showing additional scan/configuration results.**
+
+![Terminal output showing additional scan/configuration results.](docs/screenshots/Screenshot%202026-11-11%20224758.png)
+
+
+</details>
+
+### Phase 8 — Supply-chain and repository security
+
+Gitleaks repository-history scan evidence. The CI workflow also runs a Trivy filesystem scan for CRITICAL, unfixed vulnerabilities.
+
+<details>
+<summary>View 1 screenshot(s) for this phase</summary>
+
+
+**Evidence 130 — Gitleaks repository scan output reporting no leaks found in the scanned content.**
+
+![Gitleaks repository scan output reporting no leaks found in the scanned content.](docs/screenshots/Screenshot%202026-11-19%20122236.png)
+
+
+</details>
+
+### Phase 9 — AWS EKS, Terraform and cloud validation
+
+Terraform planning/apply evidence, AWS/EKS setup, load balancer/controller and metrics-server checks, Argo CD application health, Prometheus targets, network-policy checks, HPA scaling and Grafana load dashboards.
+
+<details>
+<summary>View 23 screenshot(s) for this phase</summary>
+
+
+**Evidence 131 — Terraform configuration/apply workflow evidence for the EKS demo environment.**
+
+![Terraform configuration/apply workflow evidence for the EKS demo environment.](docs/screenshots/Screenshot%202026-11-22%20142932.png)
+
+
+**Evidence 132 — Terraform plan output showing the proposed AWS infrastructure changes.**
+
+![Terraform plan output showing the proposed AWS infrastructure changes.](docs/screenshots/Screenshot%202026-11-22%20153135.png)
+
+
+**Evidence 133 — Terraform plan review for the EKS/VPC infrastructure resources.**
+
+![Terraform plan review for the EKS/VPC infrastructure resources.](docs/screenshots/Screenshot%202026-11-24%20125851.png)
+
+
+**Evidence 134 — AWS/EKS node and cluster resource inventory during the deployment session.**
+
+![AWS/EKS node and cluster resource inventory during the deployment session.](docs/screenshots/Screenshot%202026-11-25%20141815.png)
+
+
+**Evidence 135 — GitHub Actions pipeline run associated with the AWS/ECR integration.**
+
+![GitHub Actions pipeline run associated with the AWS/ECR integration.](docs/screenshots/Screenshot%202026-11-25%20160801.png)
+
+
+**Evidence 136 — AWS console evidence for the cloud-side project integration/configuration.**
+
+![AWS console evidence for the cloud-side project integration/configuration.](docs/screenshots/Screenshot%202026-11-25%20162442.png)
+
+
+**Evidence 137 — Terraform output values used to identify the EKS/VPC and load-balancer controller resources.**
+
+![Terraform output values used to identify the EKS/VPC and load-balancer controller resources.](docs/screenshots/Screenshot%202026-11-25%20170124.png)
+
+
+**Evidence 138 — AWS Load Balancer Controller installation and Kubernetes deployment verification.**
+
+![AWS Load Balancer Controller installation and Kubernetes deployment verification.](docs/screenshots/Screenshot%202026-11-25%20170804.png)
+
+
+**Evidence 139 — Metrics Server installation and resource metrics availability in the EKS cluster.**
+
+![Metrics Server installation and resource metrics availability in the EKS cluster.](docs/screenshots/Screenshot%202026-11-25%20171656.png)
+
+
+**Evidence 140 — Argo CD Applications view before the EKS application was registered.**
+
+![Argo CD Applications view before the EKS application was registered.](docs/screenshots/Screenshot%202026-11-25%20172924.png)
+
+
+**Evidence 141 — Prometheus and monitoring pods running in the EKS monitoring namespace.**
+
+![Prometheus and monitoring pods running in the EKS monitoring namespace.](docs/screenshots/Screenshot%202026-11-25%20190702.png)
+
+
+**Evidence 142 — Argo CD EKS application showing Synced/Healthy status, alongside application health verification.**
+
+![Argo CD EKS application showing Synced/Healthy status, alongside application health verification.](docs/screenshots/Screenshot%202026-11-25%20194226.png)
+
+
+**Evidence 143 — EKS cluster command-line resource inspection during deployment validation.**
+
+![EKS cluster command-line resource inspection during deployment validation.](docs/screenshots/Screenshot%202026-11-25%20194449.png)
+
+
+**Evidence 144 — Prometheus pod status and monitoring workload verification in EKS.**
+
+![Prometheus pod status and monitoring workload verification in EKS.](docs/screenshots/Screenshot%202026-11-25%20194540.png)
+
+
+**Evidence 145 — Prometheus target-health output showing active targets and both application scrape targets UP.**
+
+![Prometheus target-health output showing active targets and both application scrape targets UP.](docs/screenshots/Screenshot%202026-11-25%20200418.png)
+
+
+**Evidence 146 — Grafana dashboard during load activity, showing application/cluster telemetry.**
+
+![Grafana dashboard during load activity, showing application/cluster telemetry.](docs/screenshots/Screenshot%202026-11-25%20201154.png)
+
+
+**Evidence 147 — NetworkPolicy test showing cross-namespace traffic blocked as intended.**
+
+![NetworkPolicy test showing cross-namespace traffic blocked as intended.](docs/screenshots/Screenshot%202026-11-25%20210706.png)
+
+
+**Evidence 148 — Grafana dashboard showing request/latency/pod metrics during load testing.**
+
+![Grafana dashboard showing request/latency/pod metrics during load testing.](docs/screenshots/Screenshot%202026-11-25%20233046.png)
+
+
+**Evidence 149 — HPA output showing replicas scaling in response to workload and then stabilizing.**
+
+![HPA output showing replicas scaling in response to workload and then stabilizing.](docs/screenshots/Screenshot%202026-11-25%20233342.png)
+
+
+**Evidence 150 — AWS EKS console view showing the demo cluster active with its worker nodes.**
+
+![AWS EKS console view showing the demo cluster active with its worker nodes.](docs/screenshots/Screenshot%202026-11-25%20233722.png)
+
+
+**Evidence 151 — AWS VPC resource map showing the EKS networking layout.**
+
+![AWS VPC resource map showing the EKS networking layout.](docs/screenshots/Screenshot%202026-11-25%20234050.png)
+
+
+**Evidence 152 — AWS console infrastructure view for the EKS deployment resources.**
+
+![AWS console infrastructure view for the EKS deployment resources.](docs/screenshots/Screenshot%202026-11-25%20234222.png)
+
+
+**Evidence 153 — Argo CD EKS application resource graph showing the deployed Kubernetes components.**
+
+![Argo CD EKS application resource graph showing the deployed Kubernetes components.](docs/screenshots/Screenshot%202026-11-25%20234844.png)
+
+
+</details>
+
+
+## Application endpoints
+
+The Flask application is assembled through an application factory and registers separate route blueprints.
+
+| Endpoint | Purpose |
+|---|---|
+| `/` | Application landing page |
+| `/health` | Health check used by container/Kubernetes/CI validation |
+| `/info` | Runtime/application information |
+| `/version` | Application version/build metadata |
+| `/metrics` | Application metrics endpoint |
+| `/metrics/prometheus` | Prometheus scrape endpoint used by the Kubernetes ServiceMonitor |
+| `/tech-stack` | Technology-stack information |
+| `/developer` | Project/developer metadata |
+| `/gitops-demo` | Demonstration endpoint describing the GitOps delivery flow |
+
+## Run locally
+
+### Prerequisites
+
+- Git
+- Python 3.12
+- pip
+- Docker Desktop (for the container workflow)
+- For Kubernetes work: `kubectl`, Minikube and Helm
+- For GitOps: Argo CD CLI/UI and a running Kubernetes cluster
+- For AWS reproduction: AWS CLI, Terraform, an AWS account with appropriately scoped permissions, and GitHub repository secrets/variables configured for OIDC
+
+### Clone and install
 
 ```bash
-kubeseal --cert https://your.intranet.company.com/sealed-secrets/your-cluster.cert
+git clone https://github.com/shivam535353/production-grade-devops-platform.git
+cd production-grade-devops-platform
+
+python -m venv .venv
+source .venv/Scripts/activate   # Git Bash on Windows
+# On macOS/Linux use: source .venv/bin/activate
+
+python -m pip install --upgrade pip
+pip install -r requirements.txt
 ```
 
-It also recognizes the `SEALED_SECRETS_CERT` env var. (pro-tip: see also [direnv](https://github.com/direnv/direnv)).
-
-> **NOTE**: we are working on providing key management mechanisms that offload the encryption to HSM based modules or managed cloud crypto solutions such as KMS.
-
-### Scopes
-
-SealedSecrets are from the POV of an end user a "write only" device.
-
-The idea is that the SealedSecret can be decrypted only by the controller running in the target cluster and
-nobody else (not even the original author) is able to obtain the original Secret from the SealedSecret.
-
-The user may or may not have direct access to the target cluster.
-More specifically, the user might or might not have access to the Secret unsealed by the controller.
-
-There are many ways to configure RBAC on k8s, but it's quite common to forbid low-privilege users
-from reading Secrets. It's also common to give users one or more namespaces where they have higher privileges,
-which would allow them to create and read secrets (and/or create deployments that can reference those secrets).
-
-Encrypted `SealedSecret` resources are designed to be safe to be looked at without gaining any knowledge about the secrets it conceals. This implies that we cannot allow users to read a SealedSecret meant for a namespace they wouldn't have access to
-and just push a copy of it in a namespace where they can read secrets from.
-
-Sealed-secrets thus behaves *as if* each namespace had its own independent encryption key and thus once you
-seal a secret for a namespace, it cannot be moved in another namespace and decrypted there.
-
-We don't technically use an independent private key for each namespace, but instead we *include* the namespace name
-during the encryption process, effectively achieving the same result.
-
-Furthermore, namespaces are not the only level at which RBAC configurations can decide who can see which secret. In fact, it's possible that users can access a secret called `foo` in a given namespace but not any other secret in the same namespace. We cannot thus by default let users freely rename `SealedSecret` resources otherwise a malicious user would be able to decrypt any SealedSecret for that namespace by just renaming it to overwrite the one secret user does have access to. We use the same mechanism used to include the namespace in the encryption key to also include the secret name.
-
-That said, there are many scenarios where you might not care about this level of protection. For example, the only people who have access to your clusters are either admins or they cannot read any `Secret` resource at all. You might have a use case for moving a sealed secret to other namespaces (e.g. you might not know the namespace name upfront), or you might not know the name of the secret (e.g. it could contain a unique suffix based on the hash of the contents etc).
-
-These are the possible scopes:
-
-- `strict` (default): the secret must be sealed with exactly the same *name* and *namespace*. These attributes become *part of the encrypted data* and thus changing name and/or namespace would lead to "decryption error".
-- `namespace-wide`: you can freely *rename* the sealed secret within a given namespace.
-- `cluster-wide`: the secret can be unsealed in *any* namespace and can be given *any* name.
-
-In contrast to the restrictions of *name* and *namespace*, secret *items* (i.e. JSON object keys like `spec.encryptedData.my-key`) can be renamed at will without losing the ability to decrypt the sealed secret.
-
-The scope is selected with the `--scope` flag:
+Start the Flask application:
 
 ```bash
-kubeseal --scope cluster-wide <secret.yaml >sealed-secret.json
+export APP_ENV=development
+python app.py
 ```
 
-It's also possible to request a scope via annotations in the input secret you pass to `kubeseal`:
-
-- `sealedsecrets.bitnami.com/namespace-wide: "true"` -> for `namespace-wide`
-- `sealedsecrets.bitnami.com/cluster-wide: "true"` -> for `cluster-wide`
-
-The lack of any of such annotations means `strict` mode. If both are set, `cluster-wide` takes precedence.
-
-> NOTE: Next release will consolidate this into a single `sealedsecrets.bitnami.com/scope` annotation.
-
-## Installation
-
-See https://github.com/bitnami-labs/sealed-secrets/releases for the latest release and detailed installation instructions.
-
-Cloud platform specific notes and instructions:
-
-- [GKE](docs/GKE.md)
-
-### Controller
-
-Once you deploy the manifest it will create the `SealedSecret` resource
-and install the controller into `kube-system` namespace, create a service
-account and necessary RBAC roles.
-
-After a few moments, the controller will start, generate a key pair,
-and be ready for operation. If it does not, check the controller logs.
-
-#### Kustomize
-
-The official controller manifest installation mechanism is just a YAML file.
-
-In some cases you might need to apply your own customizations, like set a custom namespace or set some env variables.
-
-`kubectl` has native support for that, see [kustomize](https://kustomize.io/).
-
-#### Helm Chart
-
-The Sealed Secrets helm chart is now officially supported and hosted in this GitHub repo.
+Open `http://127.0.0.1:5000` and verify:
 
 ```bash
-helm repo add sealed-secrets https://bitnami-labs.github.io/sealed-secrets
+curl -i http://127.0.0.1:5000/health
+curl -i http://127.0.0.1:5000/version
+curl -i http://127.0.0.1:5000/metrics
 ```
 
-> NOTE: The versioning scheme of the helm chart differs from the versioning scheme of the sealed secrets project itself.
+The configuration generates a development secret when `SECRET_KEY` is not supplied. For a production deployment, provide a strong secret through a secure environment/secret manager; never commit it to Git.
 
-Originally the helm chart was maintained by the community and the first version adopted a major version of 1 while the
-sealed secrets project itself is still at major 0.
-This is ok because the version of the helm chart itself is not meant to be necessarily the version of the app itself.
-However this is confusing, so our current versioning rule is:
+## Run with Docker
 
-1. The `SealedSecret` controller version scheme: 0.X.Y
-2. The helm chart version scheme: 1.X.Y-rZ
-
-There can be thus multiple revisions of the helm chart, with fixes that apply only to the helm chart without
-affecting the static YAML manifests or the controller image itself.
-
-> NOTE: The helm chart readme still contains a deprecation notice, but it no longer reflects reality and will be removed upon the next release.
-
-> NOTE: The helm chart by default installs the controller with the name `sealed-secrets`, while the `kubeseal` command line interface (CLI) tries to access the controller with the name `sealed-secrets-controller`. You can explicitly pass `--controller-name` to the CLI:
+Build the image:
 
 ```bash
-kubeseal --controller-name sealed-secrets <args>
+docker build -t production-grade-devops-platform:local .
 ```
 
-Alternatively, you can set `fullnameOverride` when installing the chart to override the name. Note also that `kubeseal` assumes that the controller is installed within the `kube-system` namespace by default. So if you want to use the `kubeseal` CLI without having to pass the expected controller name and namespace you should install the Helm Chart like this:
+Run the container:
 
 ```bash
-helm install sealed-secrets -n kube-system --set-string fullnameOverride=sealed-secrets-controller sealed-secrets/sealed-secrets
+docker run --rm \
+  --name devops-platform \
+  -p 5000:5000 \
+  -e APP_ENV=production \
+  -e SECRET_KEY="$(python -c 'import secrets; print(secrets.token_hex(32))')" \
+  production-grade-devops-platform:local
 ```
 
-##### Helm Chart on a restricted environment
-
-In some companies you might be given access only to a single namespace, not a full cluster.
-
-One of the most restrictive environments you can encounter is:
-- A `namespace` was allocated to you with some `service account`.
-- You do not have access to the rest of the cluster, not even cluster CRDs.
-- You may not even be able to create further service accounts or roles in your namespace.
-- You are required to include resource limits in all your deployments.
-
-Even with these restrictions you can still install the sealed secrets Helm Chart, there is only one pre-requisite:
-- *The cluster must already have the sealed secrets CRDs installed*.
-
-Once your admins installed the CRDs, if they were not there already, you can install the chart by preparing a YAML config file such as this:
-
-```shell
-serviceAccount:
-  create: false
-  name: {allocated-service-account}
-rbac:
-  create: false
-  clusterRole: false
-resources:
-  limits:
-    cpu: 150m
-    memory: 256Mi
-```
-
-Note that:
-- No service accounts are created, instead the one allocated to you will be used.
-  - `{allocated-service-account}` is the name of the `service account` you were allocated on the cluster.
-- No RBAC roles are created neither in the namespace nor the cluster.
-- Resource limits must be specified.
-  - The limits are samples that should work, but you might want to review them in your particular setup.
-
-Once that file is ready, if you named it `config.yaml` you now can install the sealed secrets Helm Chart like this:
-
-```shell
-helm install sealed-secrets -n {allocated-namespace} sealed-secrets/sealed-secrets --skip-crds -f config.yaml
-```
-
-Where `{allocated-namespace}` is the name of the `namespace` you were allocated in the cluster.
-
-### Kubeseal
-
-#### Homebrew
-
-The `kubeseal` client is also available on [homebrew](https://formulae.brew.sh/formula/kubeseal):
+Validate the running container:
 
 ```bash
-brew install kubeseal
+curl -i http://127.0.0.1:5000/health
+docker ps
+docker logs devops-platform
 ```
 
-#### MacPorts
+The Dockerfile uses a Python 3.12 slim builder/runtime, installs dependencies in a builder stage, runs as UID 1001 (`appuser`) and defines a container health check against `/health`.
 
-The `kubeseal` client is also available on [MacPorts](https://ports.macports.org/port/kubeseal/summary):
+## Kubernetes and Helm deployment
+
+> These commands assume a working local Minikube cluster and that the chart's development values are appropriate for your machine. Review the values file before applying it.
+
+Start Minikube and verify the context:
 
 ```bash
-port install kubeseal
+minikube start
+kubectl config current-context
+kubectl get nodes
 ```
 
-#### Nixpkgs
-
-The `kubeseal` client is also available on [Nixpkgs](https://search.nixos.org/packages?channel=unstable&show=kubeseal&from=0&size=50&sort=relevance&type=packages&query=kubeseal): (**DISCLAIMER**: Not maintained by bitnami-labs)
+Install or upgrade the application chart:
 
 ```bash
-nix-env -iA nixpkgs.kubeseal
+helm lint ./helm/devops-platform
+helm template devops-platform ./helm/devops-platform \
+  --namespace dev \
+  -f helm/devops-platform/values-dev.yaml
+
+kubectl create namespace dev --dry-run=client -o yaml | kubectl apply -f -
+
+helm upgrade --install devops-platform ./helm/devops-platform \
+  --namespace dev \
+  -f helm/devops-platform/values-dev.yaml
+
+kubectl get deployments,pods,services -n dev
+kubectl rollout status deployment/devops-platform -n dev
 ```
 
-#### Linux
+If the release's Deployment name differs from `devops-platform` in a customized values file, use `kubectl get deployments -n dev` and pass the actual Deployment name to `kubectl rollout status`.
 
-The `kubeseal` client can be installed on Linux, using the below commands:
+### Argo CD / GitOps
+
+The repository includes Argo CD configuration under `argocd/`. The GitOps workflow is:
+
+1. Connect the repository to Argo CD.
+2. Register the relevant Argo CD Application manifest from `argocd/`.
+3. Confirm the source repository/path and destination cluster/namespace.
+4. Commit a Helm values change to Git.
+5. Confirm that Argo CD detects the revision and reports the Application as `Synced` and `Healthy`.
+
+Do not store plaintext credentials in Helm values. The EKS values configuration references an existing Kubernetes Secret named `devops-platform-app-secret`; create/manage that Secret through an approved secret-management process before deploying the chart.
+
+## AWS deployment notes
+
+The AWS demonstration was implemented in `ap-south-1` using Terraform and Amazon EKS. The repository contains separate Terraform areas for bootstrap, CI/ECR/OIDC and the EKS demo.
+
+A safe reproduction sequence is:
+
+1. Configure the AWS CLI with a dedicated profile and confirm the account/region.
+2. Review the Terraform variables, backend configuration, IAM permissions and estimated costs.
+3. Initialize and apply the bootstrap stack if the remote-state bucket does not already exist.
+4. Initialize the CI stack to provision/configure ECR and GitHub OIDC role resources.
+5. Review the EKS demo Terraform plan before applying it.
+6. Configure `kubectl`, install required EKS add-ons/controllers, and verify node readiness.
+7. Ensure the Kubernetes Secret referenced by `values-eks.yaml` exists.
+8. Deploy the EKS Argo CD Application and verify the ALB health check, Pods, HPA and Prometheus targets.
+9. Destroy the EKS demo stack when testing is complete, while retaining only intentionally persistent resources.
+
+Illustrative Terraform commands (run from the repository root; inspect each plan before applying):
 
 ```bash
-KUBESEAL_VERSION='' # Set this to, for example, KUBESEAL_VERSION='0.23.0'
-curl -OL "https://github.com/bitnami-labs/sealed-secrets/releases/download/v${KUBESEAL_VERSION:?}/kubeseal-${KUBESEAL_VERSION:?}-linux-amd64.tar.gz"
-tar -xvzf kubeseal-${KUBESEAL_VERSION:?}-linux-amd64.tar.gz kubeseal
-sudo install -m 755 kubeseal /usr/local/bin/kubeseal
+export AWS_PROFILE=<your-aws-profile>
+export AWS_REGION=ap-south-1
+export AWS_DEFAULT_REGION=ap-south-1
+
+terraform -chdir=terraform/bootstrap init
+terraform -chdir=terraform/bootstrap plan
+# Apply only after reviewing the plan:
+terraform -chdir=terraform/bootstrap apply
+
+terraform -chdir=terraform/ci init
+terraform -chdir=terraform/ci plan
+# Apply only after reviewing the plan:
+terraform -chdir=terraform/ci apply
+
+terraform -chdir=terraform/eks-demo init
+terraform -chdir=terraform/eks-demo plan
+# EKS, NAT gateways, load balancers and data transfer can incur charges.
+# Apply only when you are ready to run the demonstration:
+terraform -chdir=terraform/eks-demo apply
 ```
 
-If you have `curl` and `jq` installed on your machine, you can get the version dynamically this way. This can be useful for environments used in automation and such.
+Do not copy account IDs, ARNs, access keys, Terraform state contents or generated secrets from screenshots into public documentation. Configure the GitHub Actions variable `AWS_ROLE_ARN` and required repository secrets/permissions using your own environment values.
 
-```
-# Fetch the latest sealed-secrets version using GitHub API
-KUBESEAL_VERSION=$(curl -s https://api.github.com/repos/bitnami-labs/sealed-secrets/tags | jq -r '.[0].name' | cut -c 2-)
+## Security design
 
-# Check if the version was fetched successfully
-if [ -z "$KUBESEAL_VERSION" ]; then
-    echo "Failed to fetch the latest KUBESEAL_VERSION"
-    exit 1
-fi
+- **Non-root container:** the runtime image runs as a dedicated non-root user (UID 1001).
+- **Container health check:** Docker checks the application's `/health` endpoint.
+- **CI secret scanning:** Gitleaks scans the Git history and redacts detected secret values in output.
+- **Filesystem vulnerability scanning:** Trivy is configured to fail the workflow on CRITICAL, unfixed findings.
+- **OIDC federation:** GitHub Actions obtains short-lived AWS credentials by assuming an IAM role through GitHub's OIDC provider; long-lived AWS access keys are not required in GitHub secrets for this path.
+- **Kubernetes hardening:** the EKS values include non-root execution, dropped Linux capabilities, RuntimeDefault seccomp, NetworkPolicy and a pre-created Secret reference.
+- **Secret separation:** runtime secret data is not intended to live in Helm values or committed plaintext manifests.
 
-curl -OL "https://github.com/bitnami-labs/sealed-secrets/releases/download/v${KUBESEAL_VERSION}/kubeseal-${KUBESEAL_VERSION}-linux-amd64.tar.gz"
-tar -xvzf kubeseal-${KUBESEAL_VERSION}-linux-amd64.tar.gz kubeseal
-sudo install -m 755 kubeseal /usr/local/bin/kubeseal
-```
+Security scans are point-in-time checks; rerun them against the current branch and dependency set before using the project as a production baseline.
 
-where `KUBESEAL_VERSION` is the [version tag](https://github.com/bitnami-labs/sealed-secrets/tags) of the kubeseal release you want to use. For example: `v0.18.0`.
+## Engineering challenges and learnings
 
-#### Installation from source
+- **Environment parity:** using a common Helm chart with environment-specific values separates application packaging from deployment configuration.
+- **GitOps reconciliation:** a Git commit becomes the desired state; Argo CD compares the repository state with the live cluster and reports synchronization/health.
+- **Image traceability:** SHA-based image tags make it easier to associate a running container with the source revision that produced it.
+- **Cloud identity:** GitHub OIDC reduces the need for static AWS credentials and enables IAM trust conditions scoped to the repository/ref.
+- **Observability:** Prometheus scraping and Grafana dashboards make request behavior and workload changes measurable during load tests.
+- **Autoscaling behavior:** HPA scale-up and scale-down behavior needs to be observed over time; stabilization windows prevent unnecessary replica churn.
+- **Network isolation:** NetworkPolicy validation demonstrated that allowed application/monitoring traffic and blocked cross-namespace traffic must be tested explicitly.
+- **Infrastructure lifecycle:** Terraform makes it possible to create and remove expensive demo infrastructure deliberately instead of leaving it running after validation.
 
-If you just want the latest client tool, it can be installed into
-`$GOPATH/bin` with:
+## Future improvements
 
-```bash
-go install github.com/bitnami-labs/sealed-secrets/cmd/kubeseal@main
-```
+- Add automated unit/integration test coverage beyond endpoint smoke checks.
+- Add image signing and provenance attestation (for example, Sigstore/cosign).
+- Add dependency/SBOM scanning and a documented vulnerability remediation policy.
+- Add TLS with a managed certificate and a custom domain for the public ingress.
+- Add a documented promotion/approval strategy for production releases.
+- Add automated deployment verification and rollback policy for the EKS environment.
+- Add alert notification routing (for example, an explicitly configured Alertmanager receiver) and test delivery end to end.
+- Add backup/restore and disaster-recovery exercises for stateful components and Terraform state.
+- Add policy-as-code checks for Terraform and Kubernetes manifests.
 
-You can specify a release tag or a commit SHA instead of `main`.
+## Cost and lifecycle note
 
-The `go install` command will place the `kubeseal` binary at `$GOPATH/bin`:
+The EKS environment in this project was deployed and validated as a demonstration, including worker nodes, ingress/load-balancer behavior, HPA scaling, Argo CD health, Prometheus scraping and Grafana dashboards. **The EKS demo infrastructure was subsequently destroyed after validation to avoid ongoing AWS charges.** Therefore, this README documents a completed deployment exercise; it does not claim that the EKS cluster or its load balancer is currently online.
 
-```bash
-$(go env GOPATH)/bin/kubeseal
-```
+The Terraform bootstrap/S3 remote-state and CI/ECR/OIDC resources were treated separately from the EKS demo stack. Check the current AWS account before applying or destroying anything; resource state may change after this README is published.
 
-## Upgrade
+## License
 
-Don't forget to check the [release notes](RELEASE-NOTES.md) for guidance about
-possible breaking changes when you upgrade the client tool
-and/or the controller.
-
-### Supported Versions
-Currently, only the latest version of Sealed Secrets is supported for production environments.
-
-### Compatibility with Kubernetes versions
-The Sealed Secrets controller ensures compatibility with different versions of Kubernetes by relying on a stable Kubernetes API. Typically, Kubernetes versions above 1.16 are considered compatible. However, we officially support the [currently recommended Kubernetes versions](https://kubernetes.io/releases/). Additionally, versions above 1.24 undergo thorough verification through our CI process with every release.
-
-## Usage
-
-```bash
-# Create a json/yaml-encoded Secret somehow:
-# (note use of `--dry-run` - this is just a local file!)
-echo -n bar | kubectl create secret generic mysecret --dry-run=client --from-file=foo=/dev/stdin -o json >mysecret.json
-
-# This is the important bit:
-kubeseal -f mysecret.json -w mysealedsecret.json
-
-# At this point mysealedsecret.json is safe to upload to Github,
-# post on Twitter, etc.
-
-# Eventually:
-kubectl create -f mysealedsecret.json
-
-# Profit!
-kubectl get secret mysecret
-```
-
-Note the `SealedSecret` and `Secret` must have **the same namespace and
-name**. This is a feature to prevent other users on the same cluster
-from re-using your sealed secrets. See the [Scopes](#scopes) section for more info.
-
-`kubeseal` reads the namespace from the input secret, accepts an explicit `--namespace` argument, and uses
-the `kubectl` default namespace (in that order). Any labels,
-annotations, etc on the original `Secret` are preserved, but not
-automatically reflected in the `SealedSecret`.
-
-By design, this scheme *does not authenticate the user*. In other
-words, *anyone* can create a `SealedSecret` containing any `Secret`
-they like (provided the namespace/name matches). It is up to your
-existing config management workflow, cluster RBAC rules, etc to ensure
-that only the intended `SealedSecret` is uploaded to the cluster. The
-only change from existing Kubernetes is that the *contents* of the
-`Secret` are now hidden while outside the cluster.
-
-### Managing existing secrets
-
-If you want the Sealed Secrets controller to manage an existing `Secret`, you can annotate your `Secret` with the `sealedsecrets.bitnami.com/managed: "true"` annotation. The existing `Secret` will be overwritten when unsealing a `SealedSecret` with the same name and namespace, and the `SealedSecret` will take ownership of the `Secret` (so that when the `SealedSecret` is deleted the `Secret` will also be deleted).
-
-### Patching existing secrets
-
-> New in v0.23.0
-
-There are some use cases in which you don't want to replace the whole `Secret` but just add or modify some keys from the existing `Secret`. For this, you can annotate your `Secret` with `sealedsecrets.bitnami.com/patch: "true"`. Using this annotation will make sure that secret keys, labels and annotations in the `Secret` that are not present in the `SealedSecret` won't be deleted, and those present in the `SealedSecret` will be added to the `Secret` (secret keys, labels and annotations that exist both in the `Secret` and the `SealedSecret` will be modified by the `SealedSecret`).
-
-This annotation does not make the `SealedSecret` take ownership of the `Secret`. You can add both the `patch` and `managed` annotations to obtain the patching behavior while also taking ownership of the `Secret`.
-
-### Seal secret which can skip set owner references
-
-If you want `SealedSecret` and the `Secret` to be independent, which mean when you delete the `SealedSecret` the `Secret` won't disappear with it, then you have to annotate that Secret with the annotation `sealedsecrets.bitnami.com/skip-set-owner-references: "true"` ahead of applying the Usage steps. You still may also add `sealedsecrets.bitnami.com/managed: "true"` to your `Secret` so that your secret will be updated when `SealedSecret` is updated.
-
-### Update existing secrets
-
-If you want to add or update existing sealed secrets without having the cleartext for the other items,
-you can just copy&paste the new encrypted data items and merge it into an existing sealed secret.
-
-You must take care of sealing the updated items with a compatible name and namespace (see note about scopes above).
-
-You can use the `--merge-into` command to update an existing sealed secrets if you don't want to copy&paste:
-
-```bash
-echo -n bar | kubectl create secret generic mysecret --dry-run=client --from-file=foo=/dev/stdin -o json \
-  | kubeseal > mysealedsecret.json
-echo -n baz | kubectl create secret generic mysecret --dry-run=client --from-file=bar=/dev/stdin -o json \
-  | kubeseal --merge-into mysealedsecret.json
-```
-
-### Raw mode (experimental)
-
-Creating temporary Secret with the `kubectl` command, only to throw it away once piped to `kubeseal` can
-be a quite unfriendly user experience. We're working on an overhaul of the CLI experience. In the meantime,
-we offer an alternative mode where kubeseal only cares about encrypting a value to stdout, and it's your responsibility to put it inside a `SealedSecret` resource (not unlike any of the other k8s resources).
-
-It can also be useful as a building block for editor/IDE integrations.
-
-The downside is that you have to be careful to be consistent with the sealing scope, the namespace and the name.
-
-See [Scopes](#scopes)
-
-`strict` scope (default):
-
-```console
-$ echo -n foo | kubeseal --raw --namespace bar --name mysecret
-AgBChHUWLMx...
-```
-
-`namespace-wide` scope:
-
-```console
-$ echo -n foo | kubeseal --raw --namespace bar --scope namespace-wide
-AgAbbFNkM54...
-```
-Include the `sealedsecrets.bitnami.com/namespace-wide` annotation in the `SealedSecret`
-```yaml
-metadata:
-  annotations:
-    sealedsecrets.bitnami.com/namespace-wide: "true"
-```
-
-`cluster-wide` scope:
-
-```console
-$ echo -n foo | kubeseal --raw --scope cluster-wide
-AgAjLKpIYV+...
-```
-Include the `sealedsecrets.bitnami.com/cluster-wide` annotation in the `SealedSecret`
-```yaml
-metadata:
-  annotations:
-    sealedsecrets.bitnami.com/cluster-wide: "true"
-```
-
-### Validate a Sealed Secret
-
-If you want to validate an existing sealed secret, `kubeseal` has the flag `--validate` to help you.
-
-Giving a file named `sealed-secrets.yaml` containing the following sealed secret:
-
-```yaml
-apiVersion: bitnami.com/v1alpha1
-kind: SealedSecret
-metadata:
-  name: mysecret
-  namespace: mynamespace
-spec:
-  encryptedData:
-    foo: AgBy3i4OJSWK+PiTySYZZA9rO43cGDEq.....
-```
-
-You can validate if the sealed secret was properly created or not:
-
-```console
-$ cat sealed-secrets.yaml | kubeseal --validate
-```
-
-In case of an invalid sealed secret, `kubeseal` will show:
-
-```console
-$ cat sealed-secrets.yaml | kubeseal --validate
-error: unable to decrypt sealed secret
-```
-
-## Secret Rotation
-
-You should always rotate your secrets. But since your secrets are encrypted with another secret,
-you need to understand how these two layers relate to take the right decisions.
-
-TL;DR:
-
-> If a *sealing* private key is compromised, you need to follow the instructions below in "Early key renewal"
-> section before rotating any of your actual secret values.
->
-> SealedSecret key renewal and re-encryption features are **not a substitute** for periodical rotation of your actual secret values.
-
-### Sealing key renewal
-
-Sealing keys are automatically renewed every 30 days. Which means a new sealing key is created and appended to the set of active sealing keys the controller can use to unseal `SealedSecret` resources.
-
-The most recently created sealing key is the one used to seal new secrets when you use `kubeseal` and it's the one whose certificate is downloaded when you use `kubeseal --fetch-cert`.
-
-The renewal time of 30 days is a reasonable default, but it can be tweaked as needed
-with the `--key-renew-period=<value>` flag for the command in the pod template of the `SealedSecret` controller. The `value` field can be given as golang
-duration flag (eg: `720h30m`). Assuming that you've installed Sealed Secrets into the `kube-system` namespace, use the following command to edit the Deployment controller, and add the `--key-renew-period` parameter. Once you close your text editor, and the Deployment controller has been modified, a new Pod will be automatically created to replace the old Pod.
-
-```
-kubectl edit deployment/sealed-secrets-controller --namespace=kube-system
-```
-
-A value of `0` will deactivate automatic key renewal. Of course, you may have a valid use case for deactivating automatic sealing key renewal but experience has shown that new users often tend to jump to conclusions that they want control over key renewal, before fully understanding how sealed secrets work. Read more about this in the [common misconceptions](#common-misconceptions-about-key-renewal) section below.
-
-> Unfortunately, you cannot use e.g. "d" as a unit for days because that's not supported by the Go stdlib. Instead of hitting your face with a palm, take this as an opportunity to meditate on the [falsehoods programmers believe about time](https://infiniteundo.com/post/25326999628/falsehoods-programmers-believe-about-time).
-
-A common misunderstanding is that key renewal is often thought of as a form of key rotation, where the old key is not only obsolete but actually bad and that you thus want to get rid of it.
-It doesn't help that this feature has been historically called "key rotation", which can add to the confusion.
-
-Sealed secrets are not automatically rotated and old keys are not deleted
-when new keys are generated. Old `SealedSecret` resources can be still decrypted (that's because old sealing keys are not deleted).
-
-### User secret rotation
-
-The *sealing key* renewal and SealedSecret rotation are **not a substitute** for rotating your actual secrets.
-
-A core value proposition of this tool is:
-
-> Encrypt your Secret into a SealedSecret, which *is* safe to store - even inside a public repository.
-
-If you store anything in a version control storage, and in a public one in particular, you must assume
-you cannot ever delete that information.
-
-*If* a sealing key somehow leaks out of the cluster you must consider all your `SealedSecret` resources
-encrypted with that key as compromised. No amount of sealing key rotation in the cluster or even re-encryption of existing SealedSecrets files can change that.
-
-The best practice is to periodically rotate all your actual secrets (e.g. change the password) **and** craft new
-`SealedSecret` resources with those new secrets.
-
-But if the `SealedSecret` controller was not renewing the *sealing key* that rotation would be moot,
-since the attacker could just decrypt the new secrets as well. Thus, you need to do both: periodically renew the sealing key and rotate your actual secrets!
-
-### Early key renewal
-
-If you know or suspect a *sealing key* has been compromised you should renew the key ASAP before you
-start sealing your new rotated secrets, otherwise you'll be giving attackers access to your new secrets as well.
-
-A key can be generated early by passing the current timestamp to the controller into a flag called `--key-cutoff-time` or an env var called `SEALED_SECRETS_KEY_CUTOFF_TIME`. The expected format is RFC1123, you can generate it with the `date -R` unix command.
-
-### Common misconceptions about key renewal
-
-Sealed secrets sealing keys are not access control keys (e.g. a password). They are more like the GPG key you might use to read encrypted mail sent to you. Let's continue with the email analogy for a bit:
-
-Imagine you have reasons to believe your private GPG key might have been compromised. You'd have more to lose than to gain if the first thing you do is just delete your private key. All the previous emails sent with that key are no longer accessible to you (unless you have a decrypted copy of those emails), nor are new emails sent by your friends whom you have not yet managed to tell to use the new key.
-
-Sure, the content of those encrypted emails is not secure, as an attacker might now be able to decrypt them, but what's done is done. Your sudden loss of the ability to read those emails surely doesn't undo the damage. If anything, it's worse because you no longer know for sure what secret the attacker got to know. What you really want to do is to make sure that your friend stops using your old key and that from now on all further communication is encrypted with a new key pair (i.e. your friend must know about that new key).
-
-The same logic applies to SealedSecrets. The ultimate goal is to secure your actual "user" secrets. The "sealing" secrets are just a mechanism, an "envelope". If a secret is leaked there is no going back, what's done is done.
-
-You first need to ensure that new secrets don't get encrypted with that old compromised key (in the email analogy above that's: create a new key pair and give all your friends your new public key).
-
-The second logical step is to neutralize the damage, which depends on the nature of the secret. A simple example is a database password: if you accidentally leak your database password, the thing you're supposed to do is simply to change your database password (on the database; and revoke the old one!) *and* update the `SealedSecret` resource with the new password (i.e. running `kubeseal` again).
-
-Both steps are described in the previous sections, albeit in a less verbose way. There is no shame in reading them again, now that you have a more in-depth grasp of the underlying rationale.
-
-### Manual key management (advanced)
-
-The `SealedSecret` controller and the associated workflow are designed to keep old sealing keys around and periodically add new ones. You should not delete old keys unless you know what you're doing.
-
-That said, if you want you can manually manage (create, move, delete) *sealing keys*. They are just normal k8s secrets living in the same namespace where the `SealedSecret` controller lives (usually `kube-system`, but it's configurable).
-
-There are advanced use cases that you can address by creative management of the sealing keys.
-For example, you can share the same sealing key among a few clusters so that you can apply exactly the same sealed secret in multiple clusters.
-Since sealing keys are just normal k8s secrets you can even use sealed secrets themselves and use a GitOps workflow to manage your sealing keys (useful when you want to share the same key among different clusters)!
-
-Labeling a *sealing key* secret with anything other than `active` effectively deletes
-the key from the `SealedSecret` controller, but it is still available in k8s for
-manual encryption/decryption if need be.
-
-**NOTE** `SealedSecret` controller currently does not automatically pick up manually created, deleted or relabeled sealing keys. An admin must restart the controller before the effect will apply.
-
-### Re-encryption (advanced)
-
-Before you can get rid of some old sealing keys you need to re-encrypt your SealedSecrets with the latest private key.
-
-```bash
-kubeseal --re-encrypt <my_sealed_secret.json >tmp.json \
-  && mv tmp.json my_sealed_secret.json
-```
-
-The invocation above will produce a new sealed secret file freshly encrypted with
-the latest key, without making the secrets leave the cluster to the client. You can then save that file
-in your version control system (`kubeseal --re-encrypt` doesn't update the in-cluster object).
-
-Currently, old keys are not garbage collected automatically.
-
-It's a good idea to periodically re-encrypt your SealedSecrets. But as mentioned above, don't lull yourself in a false sense of security: you must assume the old version of the `SealedSecret` resource (the one encrypted with a key you think of as dead) is still potentially around and accessible to attackers. I.e. re-encryption is not a substitute for periodically rotating your actual secrets.
-
-## Details (advanced)
-
-This controller adds a new `SealedSecret` custom resource. The
-interesting part of a `SealedSecret` is a base64-encoded
-asymmetrically encrypted `Secret`.
-
-The controller maintains a set of private/public key pairs as kubernetes
-secrets. Keys are labeled with `sealedsecrets.bitnami.com/sealed-secrets-key`
-and identified in the label as either `active` or `compromised`. On startup,
-The sealed secrets controller will...
-
-1. Search for these keys and add them to its local store if they are
-labeled as active.
-2. Create a new key
-3. Start the key rotation cycle
-
-### Crypto
-
-More details about crypto can be found [here](docs/developer/crypto.md).
-
-## Developing
-
-Developing guidelines can be found [in the Developer Guide](docs/developer/README.md).
-
-## FAQ
-
-### Can I encrypt multiple secrets at once, in one YAML / JSON file?
-
-Yes, you can! Drop as many secrets as you like in one file. Make sure to separate them via `---` for YAML and as extra, single objects in JSON.
-
-### Will you still be able to decrypt if you no longer have access to your cluster?
-
-No, the private keys are only stored in the Secret managed by the controller (unless you have some other backup of your k8s objects). There are no backdoors - without that private key used to encrypt a given SealedSecrets, you can't decrypt it. If you can't get to the Secrets with the encryption keys, and you also can't get to the decrypted versions of your Secrets live in the cluster, then you will need to regenerate new passwords for everything, seal them again with a new sealing key, etc.
-
-### How can I do a backup of my SealedSecrets?
-
-If you do want to make a backup of the encryption private keys, it's easy to do from an account with suitable access:
-
-```bash
-kubectl get secret -n kube-system -l sealedsecrets.bitnami.com/sealed-secrets-key -o yaml >main.key
-
-echo "---" >> main.key
-kubectl get secret -n kube-system sealed-secrets-key -o yaml >>main.key
-```
-
-> NOTE: You need the second statement only if you ever installed sealed-secrets older than version 0.9.x on your cluster.
-
-> NOTE: This file will contain the controller's public + private keys and should be kept omg-safe!
-
-> NOTE: After sealing key renewal you should recreate your backup. Otherwise, your backup won't be able to decrypt new sealed secrets.
-
-To restore from a backup after some disaster, just put that secrets back before starting the controller - or if the controller was already started, replace the newly-created secrets and restart the controller:
-
-* For Helm deployment:
-    ```bash
-    kubectl apply -f main.key
-    kubectl delete pod -n kube-system -l app.kubernetes.io/name=sealed-secrets
-    ```
-
-* For deployment via `controller.yaml` manifest
-    ```bash
-    kubectl apply -f main.key
-    kubectl delete pod -n kube-system -l name=sealed-secrets-controller
-    ```
-
-### Can I decrypt my secrets offline with a backup key?
-
-While treating sealed-secrets as long term storage system for secrets is not the recommended use case, some people
-do have a legitimate requirement for being able to recover secrets when the k8s cluster is down and restoring a backup into a new `SealedSecret` controller deployment is not practical.
-
-If you have backed up one or more of your private keys (see previous question), you can use the `kubeseal --recovery-unseal --recovery-private-key file1.key,file2.key,...` command to decrypt a sealed secrets file.
-
-### What flags are available for kubeseal?
-
-You can check the flags available using `kubeseal --help`.
-
-### How do I update parts of JSON/YAML/TOML/.. file encrypted with sealed secrets?
-
-A kubernetes `Secret` resource contains multiple items, basically a flat map of key/value pairs.
-SealedSecrets operate at that level, and does not care what you put in the values. In other words
-it cannot make sense of any structured configuration file you might have put in a secret and thus
-cannot help you update individual fields in it.
-
-Since this is a common problem, especially when dealing with legacy applications, we do offer an [example](docs/examples/config-template) of a possible workaround.
-
-### Can I bring my own (pre-generated) certificates?
-
-Yes, you can provide the controller with your own certificates, and it will consume them.
-Please check [here](docs/bring-your-own-certificates.md) for a workaround.
-
-### How to use kubeseal if the controller is not running within the `kube-system` namespace?
-
-If you installed the controller in a different namespace than the default `kube-system`, you need to provide this namespace
-to the `kubeseal` commandline tool. There are two options:
-
-1. You can specify the namespace via the command line option `--controller-namespace <namespace>`:
-
-  ```bash
-kubeseal --controller-namespace sealed-secrets <mysecret.json >mysealedsecret.json
-```
-
-2. Via the environment variable `SEALED_SECRETS_CONTROLLER_NAMESPACE`:
-
-  ```bash
-export SEALED_SECRETS_CONTROLLER_NAMESPACE=sealed-secrets
-kubeseal <mysecret.json >mysealedsecret.json
-```
-
-### How to verify the images?
-
-Our images are being signed using [cosign](https://github.com/sigstore/cosign). The signatures have been saved in our [GitHub Container Registry](https://ghcr.io/bitnami-labs/sealed-secrets-controller/signs).
-
-> Images up to and including v0.20.2 were signed using Cosign v1. Newer images are signed with Cosign v2.
-
-It is pretty simple to verify the images:
-
-```bash
-# export the COSIGN_VARIABLE setting up the GitHub container registry signs path
-export COSIGN_REPOSITORY=ghcr.io/bitnami-labs/sealed-secrets-controller/signs
-
-# verify the image uploaded in GHCR
-cosign verify --key .github/workflows/cosign.pub ghcr.io/bitnami-labs/sealed-secrets-controller:latest
-
-# verify the image uploaded in Dockerhub
-cosign verify --key .github/workflows/cosign.pub docker.io/bitnami/sealed-secrets-controller:latest
-```
-
-### How to use one controller for a subset of namespaces
-
-If you want to use one controller for more than one namespace, but not all namespaces, you can provide additional namespaces using the command line flag `--additional-namespaces=<namespace1>,<namespace2>,<...>`. Make sure you provide appropriate roles and rolebindings in the target namespaces, so the controller can manage the secrets in there.
-
-## Community
-
-- [#sealed-secrets on Kubernetes Slack](https://kubernetes.slack.com/messages/sealed-secrets)
-
-Click [here](http://slack.k8s.io) to sign up to the Kubernetes Slack org.
-
-### Related projects
-
-- `kubeseal-convert`: [https://github.com/EladLeev/kubeseal-convert](https://github.com/EladLeev/kubeseal-convert)
-- Visual Studio Code extension: [https://marketplace.visualstudio.com/items?itemName=codecontemplator.kubeseal](https://marketplace.visualstudio.com/items?itemName=codecontemplator.kubeseal)
-- WebSeal: generates secrets in the browser: [https://socialgouv.github.io/webseal](https://socialgouv.github.io/webseal)
-- HybridEncrypt TypeScript implementation: [https://github.com/SocialGouv/aes-gcm-rsa-oaep](https://github.com/SocialGouv/aes-gcm-rsa-oaep)
-- [DEPRACATED] Sealed Secrets Operator: [https://github.com/disposab1e/sealed-secrets-operator-helm](https://github.com/disposab1e/sealed-secrets-operator-helm)
-# Feature branch pipeline test
-test
+This project is distributed under the [Apache License 2.0](LICENSE).
